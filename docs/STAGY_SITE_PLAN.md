@@ -211,6 +211,24 @@ Didaftarkan di `config/content_blocks.php` (field + rules), di-render oleh theme
 - Nomor WhatsApp & email sengaja dikosongkan (mockup hanya berisi placeholder). Tombol WA tersembunyi sampai nomor diisi di CMS.
 - Halaman `/contact` bawaan tetap ada (tidak ditautkan); flag-nya sama dengan API kontak.
 
+## Komponen theme `stagy`
+
+Dipakai di semua view theme (`resources/themes/stagy/views/components/public/`). Markup baru sebaiknya memakai ini, bukan menulis ulang kelasnya:
+
+| Komponen | Fungsi |
+| --- | --- |
+| `container` | Kolom halaman; `width="page|article|media|text"` (1160 / 900 / 960 / 720px) |
+| `heading` | Skala judul: `size="display|title|section|subsection"`, `:text` untuk highlight `*kata*` |
+| `eyebrow` | Label kecil di atas judul; `tone="sage"` untuk latar navy |
+| `section-heading` | Eyebrow + judul + link "lihat semua" |
+| `button` | Tombol (`primary`, `outline`, `light`, `accent`, `ghost`), resolve link `whatsapp` |
+| `badge` | Pil kecil (`accent`, `mint`, `paper`) |
+| `number-badge` | Nomor `01`, `02` dalam kotak (`mint`, `ink`, `accent`; `size="sm|md"`) |
+| `check-item` | Baris checklist bertanda centang |
+| `phone-mockup` | Ilustrasi HP di panel mint (hero, 404) |
+| `post-card`, `post-cover` | Kartu & cover artikel |
+| `highlight`, `icon`, `ticket-qr` | Teks highlight, ikon garis, pola QR dekoratif |
+
 ## Catatan & pertanyaan terbuka
 
 - Konten bertanda `[Konfirmasi: …]` / `[Jawaban dari tim: …]` / `[Isi dari tim legal: …]` di-seed apa adanya agar mudah ditemukan di CMS.

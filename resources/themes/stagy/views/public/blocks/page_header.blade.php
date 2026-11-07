@@ -1,8 +1,8 @@
-<section class="mx-auto flex max-w-290 flex-col gap-5 px-4 pt-18 pb-10 sm:px-6">
+<x-public.container as="section" class="flex flex-col gap-5 pt-18 pb-10">
     @if (filled($data['eyebrow'] ?? null))
-        <span class="text-xs tracking-[0.08em] text-public-accent">{{ $data['eyebrow'] }}</span>
+        <x-public.eyebrow>{{ $data['eyebrow'] }}</x-public.eyebrow>
     @endif
-    <h1 class="max-w-225 text-[clamp(1.875rem,4vw,3rem)] leading-[1.15] font-normal"><x-public.highlight :text="$data['heading'] ?? ''" /></h1>
+    <x-public.heading :level="1" size="display" :text="$data['heading'] ?? ''" class="max-w-225" />
     @if (filled($data['intro'] ?? null))
         <p class="max-w-155 leading-[1.8] text-public-muted">{{ $data['intro'] }}</p>
     @endif
@@ -16,4 +16,4 @@
             @endforeach
         </nav>
     @endif
-</section>
+</x-public.container>

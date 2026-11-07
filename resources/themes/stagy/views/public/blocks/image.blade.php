@@ -1,5 +1,5 @@
 @if ($blockMedia)
-    <figure class="mx-auto max-w-240 px-4 py-12 sm:px-6">
+    <x-public.container as="figure" width="media" class="py-12">
         <img
             src="{{ $blockMedia->url }}"
             @if ($blockMedia->srcset) srcset="{{ $blockMedia->srcset }}" sizes="(min-width: 1024px) 60rem, 100vw" @endif
@@ -12,5 +12,5 @@
         @if (filled($data['caption'] ?? null))
             <figcaption class="mt-3 text-[0.8125rem] text-public-muted">{{ $data['caption'] }}</figcaption>
         @endif
-    </figure>
+    </x-public.container>
 @endif

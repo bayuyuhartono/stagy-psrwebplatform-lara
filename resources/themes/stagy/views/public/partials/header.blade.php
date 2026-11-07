@@ -12,7 +12,7 @@
 @endphp
 
 <header class="sticky top-0 z-40 border-b border-public-line bg-public-paper/95 backdrop-blur supports-[backdrop-filter]:bg-public-paper/90">
-    <nav aria-label="{{ __('theme::site.main_navigation') }}" class="mx-auto flex max-w-290 items-center gap-3 px-4 py-2.5 sm:px-6 lg:gap-9 lg:py-3">
+    <x-public.container as="nav" aria-label="{{ __('theme::site.main_navigation') }}" class="flex items-center gap-3 py-2.5 lg:gap-9 lg:py-3">
         <a href="{{ localized_route('home') }}" aria-label="{{ __('theme::site.go_home', ['name' => $siteName]) }}" class="mr-auto flex shrink-0 items-center lg:mr-0">
             <img src="{{ $logoUrl }}" alt="{{ $siteName }}" @if (blank($brandLogoUrl ?? null)) width="900" height="392" @endif class="h-9 w-auto lg:h-10">
         </a>
@@ -37,7 +37,7 @@
             <x-public.icon name="menu" class="size-5 group-aria-expanded:hidden" stroke-width="2.2" />
             <x-public.icon name="close" class="hidden size-5 group-aria-expanded:block" stroke-width="2.2" />
         </button>
-    </nav>
+    </x-public.container>
 
     <div id="stagy-mobile-menu" data-public-mobile-menu class="hidden border-t border-public-line px-4 pt-2 pb-5 lg:hidden">
         <div class="flex flex-col">

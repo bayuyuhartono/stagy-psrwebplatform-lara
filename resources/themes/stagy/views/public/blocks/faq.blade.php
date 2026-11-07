@@ -1,12 +1,12 @@
 {{-- Native <details> keeps the accordion keyboard- and screen-reader-friendly without script; the first answer starts open. --}}
-<section class="mx-auto flex max-w-290 flex-wrap items-start gap-14 px-4 pt-18 pb-22 sm:px-6">
+<x-public.container as="section" class="flex flex-wrap items-start gap-14 pt-18 pb-22">
     @if (filled($data['heading'] ?? null) || filled($data['eyebrow'] ?? null) || filled($data['intro'] ?? null))
         <div class="flex min-w-0 flex-[1_1_18.75rem] flex-col gap-5 lg:sticky lg:top-28">
             @if (filled($data['eyebrow'] ?? null))
-                <span class="text-xs tracking-[0.08em] text-public-accent">{{ $data['eyebrow'] }}</span>
+                <x-public.eyebrow>{{ $data['eyebrow'] }}</x-public.eyebrow>
             @endif
             @if (filled($data['heading'] ?? null))
-                <h1 class="text-[clamp(1.875rem,4vw,2.75rem)] leading-[1.18] font-normal"><x-public.highlight :text="$data['heading']" /></h1>
+                <x-public.heading :level="1" size="title" :text="$data['heading']" />
             @endif
             @if (filled($data['intro'] ?? null))
                 <p class="leading-[1.8] text-public-muted">{{ $data['intro'] }}</p>
@@ -31,4 +31,4 @@
             </details>
         @endforeach
     </div>
-</section>
+</x-public.container>

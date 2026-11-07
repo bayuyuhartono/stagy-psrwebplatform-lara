@@ -12,8 +12,8 @@
         ->filter(fn (string $label, string $network): bool => filled($social["{$network}_url"] ?? null));
 @endphp
 
-<footer class="border-t border-public-line bg-public-mist px-4 pt-14 sm:px-6">
-    <div class="mx-auto flex max-w-290 flex-col">
+<footer class="border-t border-public-line bg-public-mist pt-14">
+    <x-public.container class="flex flex-col">
         <div class="flex flex-wrap gap-x-14 gap-y-10 pb-12">
             <div class="flex min-w-0 flex-[1.4_1_17.5rem] flex-col gap-4.5">
                 <img src="{{ $logoUrl }}" alt="{{ $siteName }}" @if (blank($brandLogoUrl ?? null)) width="900" height="392" @endif class="h-11 w-auto self-start">
@@ -31,7 +31,7 @@
 
             @foreach ($footerColumns as $column)
                 <nav aria-label="{{ $column['heading'] }}" class="flex min-w-0 flex-[1_1_9.5rem] flex-col gap-1">
-                    <span class="mb-2 text-xs tracking-[0.08em] text-public-accent">{{ $column['heading'] }}</span>
+                    <x-public.eyebrow class="mb-2">{{ $column['heading'] }}</x-public.eyebrow>
                     @foreach ($column['menu']->rootItems as $item)
                         <a href="{{ $contentUrls->forMenuItem($item) }}" target="{{ $item->target->value }}" class="py-2 text-[0.8125rem] text-public-ink hover:text-public-accent">{{ $item->label }}</a>
                     @endforeach
@@ -39,7 +39,7 @@
             @endforeach
 
             <div class="flex min-w-0 flex-[1.6_1_18.75rem] flex-col gap-3.5 text-[0.8125rem] leading-[1.7]">
-                <span class="mb-0.5 text-xs tracking-[0.08em] text-public-accent">{{ __('theme::site.footer_contact') }}</span>
+                <x-public.eyebrow class="mb-0.5">{{ __('theme::site.footer_contact') }}</x-public.eyebrow>
                 @if (filled($whatsappUrl ?? null))
                     <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" class="flex items-start gap-3 hover:text-public-accent">
                         <x-public.icon name="whatsapp" class="mt-0.5 size-4 shrink-0 text-public-accent" />
@@ -74,5 +74,5 @@
                 <span>{{ __('theme::site.powered_by') }} <a href="{{ $theme['powered_by_url'] ?? 'https://pesoros.com' }}" target="_blank" rel="noopener" class="py-2.5 text-public-ink underline underline-offset-3">{{ $theme['powered_by_label'] ?? 'Pesoros' }}</a></span>
             @endif
         </div>
-    </div>
+    </x-public.container>
 </footer>

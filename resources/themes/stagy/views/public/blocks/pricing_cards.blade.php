@@ -8,7 +8,7 @@
 
 @if ($plans->isNotEmpty())
     @if (($data['variant'] ?? 'full') === 'summary')
-        <section class="mx-auto flex max-w-290 flex-col gap-10 px-4 py-22 sm:px-6">
+        <x-public.container as="section" class="flex flex-col gap-10 py-22">
             <x-public.section-heading :eyebrow="$data['eyebrow'] ?? null" :heading="$data['heading'] ?? null" :link="$data['link'] ?? null" />
             <div class="flex flex-wrap items-stretch gap-4">
                 @foreach ($plans as $plan)
@@ -18,7 +18,7 @@
                         'border border-public-line' => ! $plan->is_highlighted,
                     ])>
                         @if ($plan->is_highlighted && filled($plan->highlight_label))
-                            <span class="absolute -top-3.5 left-6 rounded-full bg-public-accent px-3 py-1.5 text-[0.6875rem] tracking-[0.06em] text-white">{{ $plan->highlight_label }}</span>
+                            <x-public.badge class="absolute -top-3.5 left-6">{{ $plan->highlight_label }}</x-public.badge>
                         @endif
                         <span class="text-base">{{ $plan->name }}</span>
                         <span class="text-2xl leading-[1.2]">{{ $prices->format($plan->price, $locale) }}<span class="text-xs text-public-muted"> {{ __('theme::site.pricing.from') }}</span></span>
@@ -31,9 +31,9 @@
             @if (filled($data['note'] ?? null))
                 <p class="text-xs text-public-muted">{{ $data['note'] }}</p>
             @endif
-        </section>
+        </x-public.container>
     @else
-        <section class="mx-auto flex max-w-290 flex-col gap-8 px-4 pt-4 pb-16 sm:px-6">
+        <x-public.container as="section" class="flex flex-col gap-8 pt-4 pb-16">
             @if (filled($data['heading'] ?? null) || filled($data['eyebrow'] ?? null))
                 <x-public.section-heading :eyebrow="$data['eyebrow'] ?? null" :heading="$data['heading'] ?? null" :link="$data['link'] ?? null" />
             @endif
@@ -48,7 +48,7 @@
                         'border border-public-line' => ! $plan->is_highlighted,
                     ])>
                         @if ($plan->is_highlighted && filled($plan->highlight_label))
-                            <span class="absolute -top-3.5 left-7 rounded-full bg-public-accent px-3 py-1.5 text-[0.6875rem] tracking-[0.06em] text-white">{{ $plan->highlight_label }}</span>
+                            <x-public.badge class="absolute -top-3.5 left-7">{{ $plan->highlight_label }}</x-public.badge>
                         @endif
                         <div class="flex flex-col gap-1.5">
                             <h2 class="text-xl font-normal">{{ $plan->name }}</h2>
@@ -64,10 +64,7 @@
                         </div>
                         <ul class="flex flex-1 flex-col gap-3">
                             @foreach ($plan->features as $feature)
-                                <li class="flex items-start gap-3 text-sm leading-[1.6]">
-                                    <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-[0.4375rem] bg-public-sage text-public-deep"><x-public.icon name="check" class="size-3" stroke-width="3" /></span>
-                                    <span>{{ $feature }}</span>
-                                </li>
+                                <x-public.check-item class="leading-[1.6]">{{ $feature }}</x-public.check-item>
                             @endforeach
                         </ul>
                         @if (filled($plan->cta_label))
@@ -79,6 +76,6 @@
             @if (filled($data['note'] ?? null))
                 <p class="text-xs leading-[1.7] text-public-muted">{{ $data['note'] }}</p>
             @endif
-        </section>
+        </x-public.container>
     @endif
 @endif

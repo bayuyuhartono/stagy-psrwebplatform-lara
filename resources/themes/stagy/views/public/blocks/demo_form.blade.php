@@ -10,12 +10,12 @@
     $labelClass = 'flex flex-col gap-2 text-xs tracking-[0.04em] text-public-muted';
 @endphp
 
-<section class="mx-auto flex max-w-290 flex-wrap items-start gap-14 px-4 pt-18 pb-22 sm:px-6">
+<x-public.container as="section" class="flex flex-wrap items-start gap-14 pt-18 pb-22">
     <div class="flex min-w-0 flex-[1_1_21.25rem] flex-col gap-6">
         @if (filled($data['eyebrow'] ?? null))
-            <span class="text-xs tracking-[0.08em] text-public-accent">{{ $data['eyebrow'] }}</span>
+            <x-public.eyebrow>{{ $data['eyebrow'] }}</x-public.eyebrow>
         @endif
-        <h1 class="text-[clamp(1.875rem,4vw,2.75rem)] leading-[1.18] font-normal"><x-public.highlight :text="$data['heading'] ?? ''" /></h1>
+        <x-public.heading :level="1" size="title" :text="$data['heading'] ?? ''" />
         @if (filled($data['intro'] ?? null))
             <p class="leading-[1.8] text-public-muted">{{ $data['intro'] }}</p>
         @endif
@@ -23,7 +23,7 @@
             <ol class="flex flex-col gap-3.5">
                 @foreach ($data['next_steps'] as $step)
                     <li class="flex items-start gap-3.5 text-sm leading-[1.7]">
-                        <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-public-mint text-xs text-public-accent">{{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}</span>
+                        <x-public.number-badge :number="$loop->iteration" size="sm" />
                         <span class="pt-1">{{ $step }}</span>
                     </li>
                 @endforeach
@@ -106,4 +106,4 @@
             <span class="text-xs text-public-muted">{{ __('theme::site.demo.required_note') }}</span>
         </div>
     </form>
-</section>
+</x-public.container>

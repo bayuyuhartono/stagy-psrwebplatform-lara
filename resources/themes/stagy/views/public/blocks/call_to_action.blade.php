@@ -1,7 +1,7 @@
-<section class="px-4 pb-22 sm:px-6">
-    <div class="mx-auto flex max-w-290 flex-wrap items-center justify-between gap-x-10 gap-y-7 rounded-[1.75rem] bg-public-ink px-[clamp(1.5rem,5vw,4rem)] py-14 text-white">
+<x-public.container as="section" class="pb-22">
+    <div class="flex flex-wrap items-center justify-between gap-x-10 gap-y-7 rounded-[1.75rem] bg-public-ink px-[clamp(1.5rem,5vw,4rem)] py-14 text-white">
         <div class="flex min-w-0 flex-[1_1_26.25rem] flex-col gap-3.5">
-            <h2 class="text-[clamp(1.5rem,2.8vw,2.125rem)] leading-[1.25] font-normal"><x-public.highlight :text="$data['heading'] ?? ''" tone="text-public-sage" /></h2>
+            <x-public.heading :text="$data['heading'] ?? ''" tone="text-public-sage" />
             @if (filled($data['body'] ?? null))
                 <p class="text-sm leading-[1.8] text-public-on-ink">{{ $data['body'] }}</p>
             @endif
@@ -13,4 +13,4 @@
             @endif
         </div>
     </div>
-</section>
+</x-public.container>

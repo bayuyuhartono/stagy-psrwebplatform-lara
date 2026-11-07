@@ -29,7 +29,7 @@
     @endif
 
     @if ($categories->isNotEmpty())
-        <nav aria-label="{{ __('theme::site.blog.categories') }}" class="mx-auto -mt-4 flex max-w-290 flex-wrap gap-2 px-4 pb-10 sm:px-6">
+        <x-public.container as="nav" aria-label="{{ __('theme::site.blog.categories') }}" class="-mt-4 flex flex-wrap gap-2 pb-10">
             @foreach ([['label' => __('theme::site.blog.all'), 'url' => localized_route($listingRoute.'.index'), 'active' => $archive === null], ...$categories->map(fn ($category) => ['label' => $category->name, 'url' => localized_route($listingRoute.'.category', $category->slug), 'active' => $category->slug === $activeCategory])] as $tab)
                 <a href="{{ $tab['url'] }}" @if ($tab['active']) aria-current="page" @endif @class([
                     'inline-flex min-h-11 items-center rounded-full border-[1.5px] px-4.5 text-[0.8125rem] tracking-[0.04em] transition',
@@ -37,44 +37,34 @@
                     'border-public-line bg-public-paper text-public-ink hover:border-public-accent' => ! $tab['active'],
                 ])>{{ $tab['label'] }}</a>
             @endforeach
-        </nav>
+        </x-public.container>
     @endif
 
     @if ($featured)
-        <section class="mx-auto max-w-290 px-4 pb-6 sm:px-6">
+        <x-public.container as="section" class="pb-6">
             <a href="{{ $postUrl($featured) }}" class="group flex flex-wrap overflow-hidden rounded-[1.75rem] border border-public-line bg-public-paper transition hover:border-public-accent">
                 <x-public.post-cover :post="$featured" sizes="(min-width: 1024px) 36rem, 100vw" class="min-h-64 flex-[1.2_1_22rem]">
-                    <span class="absolute top-5 left-5 rounded-full bg-public-paper px-3 py-1.5 text-[0.6875rem] tracking-[0.06em] text-public-ink">{{ __('theme::site.blog.latest') }}</span>
+                    <x-public.badge tone="paper" class="absolute top-5 left-5">{{ __('theme::site.blog.latest') }}</x-public.badge>
                 </x-public.post-cover>
                 <div class="flex min-w-0 flex-[1_1_20rem] flex-col justify-center gap-4 p-[clamp(1.5rem,4vw,2.75rem)]">
                     <span class="text-xs tracking-[0.06em] text-public-accent">{{ collect([$featured->categories->first()?->name, $postDate($featured)])->filter()->join(' · ') }}</span>
-                    <h2 class="text-[clamp(1.375rem,2.6vw,1.875rem)] leading-[1.3] font-normal">{{ $featured->title }}</h2>
+                    <x-public.heading size="subsection">{{ $featured->title }}</x-public.heading>
                     @if (filled($featured->excerpt))
                         <p class="text-sm leading-[1.8] text-public-muted">{{ $featured->excerpt }}</p>
                     @endif
                     <span class="text-sm tracking-[0.04em] underline underline-offset-4 group-hover:text-public-accent">{{ __('theme::site.blog.read_article') }} → <span class="text-xs text-public-muted no-underline">· {{ __('theme::site.blog.reading_time', ['count' => $readingTime->minutes($featured)]) }}</span></span>
                 </div>
             </a>
-        </section>
+        </x-public.container>
     @endif
 
-    <section class="mx-auto max-w-290 px-4 pt-4 pb-14 sm:px-6">
+    <x-public.container as="section" class="pt-4 pb-14">
         @if ($gridPosts->isEmpty() && ! $featured)
             <p class="rounded-2xl bg-public-mist p-8 text-center text-sm text-public-muted">{{ __('theme::site.blog.empty') }}</p>
         @else
             <div class="grid grid-cols-[repeat(auto-fill,minmax(17.5rem,1fr))] gap-5">
                 @foreach ($gridPosts as $post)
-                    <a href="{{ $postUrl($post) }}" class="group flex flex-col overflow-hidden rounded-[1.375rem] border border-public-line bg-public-paper transition hover:border-public-accent">
-                        <x-public.post-cover :post="$post" class="aspect-[16/10]" />
-                        <div class="flex flex-1 flex-col gap-3 p-6">
-                            <span class="text-xs tracking-[0.06em] text-public-accent">{{ collect([$post->categories->first()?->name, $postDate($post)])->filter()->join(' · ') }}</span>
-                            <h3 class="text-[1.0625rem] leading-[1.45] font-normal group-hover:text-public-accent">{{ $post->title }}</h3>
-                            @if (filled($post->excerpt))
-                                <p class="line-clamp-3 text-[0.8125rem] leading-[1.75] text-public-muted">{{ $post->excerpt }}</p>
-                            @endif
-                            <span class="mt-auto text-xs text-public-muted">{{ __('theme::site.blog.reading_time', ['count' => $readingTime->minutes($post)]) }}</span>
-                        </div>
-                    </a>
+                    <x-public.post-card :post="$post" />
                 @endforeach
             </div>
         @endif
@@ -97,7 +87,7 @@
                 @endif
             </nav>
         @endif
-    </section>
+    </x-public.container>
 
     @include('public.partials.blocks', ['blocks' => $introBlocks->slice(1)->values()->all()])
 </x-public.layout>

@@ -5,13 +5,13 @@
 @php($locale = app()->getLocale())
 
 @if ($addons->isNotEmpty())
-    <section class="mx-auto flex max-w-290 flex-wrap items-start gap-14 px-4 py-22 sm:px-6">
+    <x-public.container as="section" class="flex flex-wrap items-start gap-14 py-22">
         <div class="flex min-w-0 flex-[1_1_18.75rem] flex-col gap-4">
             @if (filled($data['eyebrow'] ?? null))
-                <span class="text-xs tracking-[0.08em] text-public-accent">{{ $data['eyebrow'] }}</span>
+                <x-public.eyebrow>{{ $data['eyebrow'] }}</x-public.eyebrow>
             @endif
             @if (filled($data['heading'] ?? null))
-                <h2 class="text-[clamp(1.5rem,2.8vw,2.125rem)] leading-[1.25] font-normal"><x-public.highlight :text="$data['heading']" /></h2>
+                <x-public.heading :text="$data['heading']" />
             @endif
             @if (filled($data['intro'] ?? null))
                 <p class="text-sm leading-[1.8] text-public-muted">{{ $data['intro'] }}</p>
@@ -35,5 +35,5 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </x-public.container>
 @endif

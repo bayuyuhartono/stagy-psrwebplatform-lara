@@ -3,13 +3,13 @@
 @php($plans = $catalog->for()['plans']->filter(fn ($plan) => filled($plan->support_summary)))
 
 @if ($plans->isNotEmpty())
-    <section class="px-4 pb-22 sm:px-6">
-        <div class="mx-auto flex max-w-290 flex-wrap items-center gap-x-14 gap-y-8 rounded-[1.75rem] bg-public-mist p-[clamp(1.5rem,4vw,3rem)]">
+    <x-public.container as="section" class="pb-22">
+        <div class="flex flex-wrap items-center gap-x-14 gap-y-8 rounded-[1.75rem] bg-public-mist p-[clamp(1.5rem,4vw,3rem)]">
             <div class="flex min-w-0 flex-[1_1_18.75rem] flex-col gap-4">
                 @if (filled($data['eyebrow'] ?? null))
-                    <span class="text-xs tracking-[0.08em] text-public-accent">{{ $data['eyebrow'] }}</span>
+                    <x-public.eyebrow>{{ $data['eyebrow'] }}</x-public.eyebrow>
                 @endif
-                <h2 class="text-[clamp(1.375rem,2.6vw,1.875rem)] leading-[1.25] font-normal"><x-public.highlight :text="$data['heading'] ?? ''" /></h2>
+                <x-public.heading size="subsection" :text="$data['heading'] ?? ''" />
                 @if (filled($data['link']['url'] ?? null))
                     @inject('links', 'App\Features\ContentBlocks\Services\ContentLinkResolver')
                     @if ($href = $links->resolve($data['link']['url']))
@@ -26,5 +26,5 @@
                 @endforeach
             </ul>
         </div>
-    </section>
+    </x-public.container>
 @endif

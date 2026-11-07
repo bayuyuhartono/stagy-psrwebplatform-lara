@@ -1,6 +1,6 @@
 {{-- Consecutive feature groups alternate side and background, keyed off their position among feature groups on the page. --}}
 @php($isEven = $position % 2 === 0)
-<div class="mx-auto max-w-290 px-4 py-4 sm:px-6">
+<x-public.container class="py-4">
     <section @if (filled($data['anchor'] ?? null)) id="{{ $data['anchor'] }}" @endif @class([
         'flex flex-wrap items-center gap-10 rounded-[1.75rem] p-[clamp(1.5rem,4vw,3rem)]',
         'flex-row bg-public-mist' => $isEven,
@@ -8,18 +8,15 @@
     ])>
         <div class="flex min-w-0 flex-[1_1_21.25rem] flex-col gap-4">
             @if (filled($data['label'] ?? null))
-                <span class="text-xs tracking-[0.08em] text-public-accent">{{ str_pad((string) ($position + 1), 2, '0', STR_PAD_LEFT) }} · {{ $data['label'] }}</span>
+                <x-public.eyebrow>{{ sprintf('%02d', $position + 1) }} · {{ $data['label'] }}</x-public.eyebrow>
             @endif
-            <h2 class="text-[clamp(1.375rem,2.6vw,1.875rem)] leading-[1.25] font-normal"><x-public.highlight :text="$data['heading'] ?? ''" /></h2>
+            <x-public.heading size="subsection" :text="$data['heading'] ?? ''" />
             @if (filled($data['description'] ?? null))
                 <p class="text-sm leading-[1.8] text-public-muted">{{ $data['description'] }}</p>
             @endif
             <ul class="flex flex-col gap-3">
                 @foreach ($data['points'] ?? [] as $point)
-                    <li class="flex items-start gap-3 text-sm leading-[1.7]">
-                        <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-[0.4375rem] bg-public-sage text-public-deep"><x-public.icon name="check" class="size-3" stroke-width="3" /></span>
-                        <span>{{ $point }}</span>
-                    </li>
+                    <x-public.check-item class="leading-[1.7]">{{ $point }}</x-public.check-item>
                 @endforeach
             </ul>
         </div>
@@ -38,4 +35,4 @@
             @endif
         </div>
     </section>
-</div>
+</x-public.container>

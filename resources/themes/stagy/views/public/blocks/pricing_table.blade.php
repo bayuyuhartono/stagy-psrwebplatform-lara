@@ -8,8 +8,8 @@
 @php($demoUrl = localized_route('website.pages.show', $themeSettings->get('demo_page_slug', 'demo')))
 
 @if ($plans->count() > 1 && (filled($pricing['groups']) || filled($pricing['included_in_all'])))
-    <section class="bg-public-mist px-4 py-22 sm:px-6">
-        <div class="mx-auto flex max-w-290 flex-col gap-10">
+    <section class="bg-public-mist py-22">
+        <x-public.container class="flex flex-col gap-10">
             <x-public.section-heading :eyebrow="$data['eyebrow'] ?? null" :heading="$data['heading'] ?? null" />
 
             @if (filled($pricing['groups']))
@@ -66,7 +66,7 @@
                 @php($planNames = $plans->pluck('name')->join(', ', $locale === 'id' ? ', dan ' : ', and '))
                 <div class="flex flex-wrap gap-x-14 gap-y-6 rounded-[1.375rem] bg-public-ink p-[clamp(1.5rem,4vw,2.5rem)] text-white">
                     <div class="flex min-w-0 flex-[1_1_16rem] flex-col gap-3">
-                        <span class="text-xs tracking-[0.08em] text-public-sage">{{ __('theme::site.pricing.included_in_all_eyebrow') }}</span>
+                        <x-public.eyebrow tone="sage">{{ __('theme::site.pricing.included_in_all_eyebrow') }}</x-public.eyebrow>
                         <h3 class="text-xl leading-[1.35] font-normal">{{ __('theme::site.pricing.included_in_all_heading', ['count' => count($pricing['included_in_all']), 'plans' => $planNames]) }}</h3>
                     </div>
                     <ul class="grid min-w-0 flex-[2_1_28rem] grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-6 gap-y-3">
@@ -79,6 +79,6 @@
                     </ul>
                 </div>
             @endif
-        </div>
+        </x-public.container>
     </section>
 @endif

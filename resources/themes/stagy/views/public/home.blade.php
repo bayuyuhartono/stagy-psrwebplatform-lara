@@ -3,9 +3,9 @@
     @if ($page !== null)
         @include('public.partials.blocks', ['blocks' => $page->blocks ?? []])
     @else
-        <section class="mx-auto flex max-w-290 flex-col gap-5 px-4 py-24 sm:px-6">
-            <h1 class="max-w-3xl text-[clamp(1.875rem,4vw,3rem)] leading-[1.15] font-normal">{{ $settings->get('general', [])['site_name'] ?? 'Stagy' }}</h1>
+        <x-public.container as="section" class="flex flex-col gap-5 py-24">
+            <x-public.heading :level="1" size="display" class="max-w-3xl">{{ $settings->get('general', [])['site_name'] ?? 'Stagy' }}</x-public.heading>
             <p class="max-w-xl text-public-muted">{{ $settings->get('general', [])['tagline'] ?? __('theme::site.footer_tagline') }}</p>
-        </section>
+        </x-public.container>
     @endif
 </x-public.layout>
