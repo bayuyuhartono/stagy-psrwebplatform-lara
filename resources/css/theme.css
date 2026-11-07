@@ -1,0 +1,22 @@
+:root {
+    --cms-navy: #0b1849;
+    --cms-green: #124d1c;
+    --cms-gold: #e4b028;
+    --cms-canvas: #ebede3;
+
+    --public-ink: #171717;
+    --public-surface: #2b2b2b;
+    --public-accent: #c7ff4a;
+    --public-paper: #f3f2ed;
+}
+
+@theme inline {
+    --color-cms-navy: var(--cms-navy);
+    --color-cms-green: var(--cms-green);
+    --color-cms-gold: var(--cms-gold);
+    --color-cms-canvas: var(--cms-canvas);
+    --color-public-ink: var(--public-ink);
+    --color-public-surface: var(--public-surface);
+    --color-public-accent: var(--public-accent);
+    --color-public-paper: var(--public-paper);
+}

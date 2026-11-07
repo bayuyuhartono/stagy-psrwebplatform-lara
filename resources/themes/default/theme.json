@@ -1,0 +1,29 @@
+{
+    "name": "Default",
+    "version": "1.0.0",
+    "author": "Pesoros",
+    "description": "The stock company-profile theme: dark hero surfaces, accent highlights, and a content-block driven page body.",
+    "settings": {
+        "show_announcement_bar": {
+            "label": "Show announcement bar",
+            "type": "boolean",
+            "default": true
+        },
+        "header_style": {
+            "label": "Header style",
+            "type": "select",
+            "default": "overlay",
+            "options": ["overlay", "solid"]
+        },
+        "footer_tagline": {
+            "label": "Footer tagline",
+            "type": "string",
+            "default": "Strategy, design, and technology for ambitious organisations."
+        },
+        "show_footer_social": {
+            "label": "Show footer social links",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}
