@@ -13,7 +13,7 @@
         </div>
 
         <div class="rounded-2xl border border-cms-navy/8 bg-white/70 shadow-sm">
-            <div class="grid gap-3 border-b border-cms-navy/8 p-4 sm:grid-cols-[1fr_11rem] sm:p-5">
+            <div class="grid gap-3 border-b border-cms-navy/8 p-4 sm:grid-cols-[1fr_11rem_11rem] sm:p-5">
                 <label class="relative block">
                     <span class="sr-only">Search pages</span>
                     <svg class="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-cms-navy/35" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-width="2" d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" /></svg>
@@ -23,6 +23,12 @@
                     <option value="">All statuses</option>
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
+                </select>
+                <select data-pages-locale aria-label="Language" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm text-cms-navy outline-none focus:border-cms-gold focus:ring-3 focus:ring-cms-gold/15">
+                    <option value="">All languages</option>
+                    @foreach (app(\App\Features\Localization\Services\LocaleRegistry::class)->options() as $code => $locale)
+                        <option value="{{ $code }}">{{ $locale['name'] }}</option>
+                    @endforeach
                 </select>
             </div>
 

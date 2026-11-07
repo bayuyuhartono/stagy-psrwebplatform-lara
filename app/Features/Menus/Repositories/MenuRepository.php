@@ -14,18 +14,18 @@ class MenuRepository
 
     public function loadTree(Menu $menu): Menu
     {
-        return $menu->load('rootItems.childrenRecursive.page');
+        return $menu->load(['rootItems.childrenRecursive.page', 'translations']);
     }
 
     public function findActiveByLocation(string $location): Menu
     {
-        return Menu::query()->where('location', $location)->where('is_active', true)
+        return Menu::query()->forCurrentLocale()->where('location', $location)->where('is_active', true)
             ->with('rootItems.childrenRecursive.page')->firstOrFail();
     }
 
     public function findActiveByLocationOrNull(string $location): ?Menu
     {
-        return Menu::query()->where('location', $location)->where('is_active', true)
+        return Menu::query()->forCurrentLocale()->where('location', $location)->where('is_active', true)
             ->with('rootItems.childrenRecursive.page')->first();
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api\V1\Admin;
 
 use App\Features\ContentBlocks\ContentBlockRegistry;
 use App\Features\Pages\Enums\PageStatus;
+use App\Http\Requests\Concerns\ValidatesTranslations;
 use App\Models\Page;
 use App\Rules\ValidContentBlocks;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -12,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class UpdatePageRequest extends FormRequest
 {
+    use ValidatesTranslations;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -29,7 +32,7 @@ class UpdatePageRequest extends FormRequest
     {
         return [
             'title' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => ['sometimes', 'required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Page::class)->ignore($this->route('page'))],
+            'slug' => ['sometimes', 'required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Page::class)->where('locale', $this->route('page')->locale)->ignore($this->route('page'))],
             'status' => ['sometimes', 'required', Rule::enum(PageStatus::class)],
             'blocks' => ['sometimes', 'present', 'array', 'max:100', new ValidContentBlocks($blockRegistry)],
             'blocks.*' => ['array:id,type,data'],
@@ -37,6 +40,7 @@ class UpdatePageRequest extends FormRequest
             'blocks.*.type' => ['required', 'string', 'max:100'],
             'blocks.*.data' => ['required', 'array'],
             'published_at' => ['nullable', 'date'],
+            ...$this->immutableTranslationRules(),
         ];
     }
 }

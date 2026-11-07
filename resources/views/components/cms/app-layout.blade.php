@@ -1,12 +1,14 @@
 @props(['title' => 'Dashboard', 'section' => 'dashboard'])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+{{-- The CMS interface is written in English regardless of the content locale. --}}
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title }} · {{ config('app.name') }} CMS</title>
+        <script type="application/json" data-cms-locales>@json(['default' => app(\App\Features\Localization\Services\LocaleRegistry::class)->default(), 'options' => app(\App\Features\Localization\Services\LocaleRegistry::class)->options()])</script>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen overflow-x-hidden" data-cms-shell>

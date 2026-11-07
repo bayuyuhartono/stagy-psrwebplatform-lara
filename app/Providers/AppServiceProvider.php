@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Features\Integrations\Services\PublicIntegrationResolver;
+use App\Features\Localization\Services\AlternateUrlResolver;
 use App\Features\Themes\Services\ThemeManager;
 use App\Models\Media;
 use App\Models\Page;
@@ -13,6 +14,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Observers\SitemapCacheObserver;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -88,8 +90,15 @@ class AppServiceProvider extends ServiceProvider
         $settings = $view->getData()['settings'] ?? collect();
         $socialImageId = $settings->get('seo', [])['social_image_id'] ?? null;
         $themes = $this->app->make(ThemeManager::class);
+        $content = $view->getData()['page'] ?? null;
+        $alternates = $this->app->make(AlternateUrlResolver::class)->resolve(
+            $this->app->make('request'),
+            $content instanceof Model ? $content : null,
+        );
 
         $view->with([
+            'alternateUrls' => $alternates,
+            'languageSwitcher' => $this->app->make(AlternateUrlResolver::class)->switcher($alternates),
             'integrations' => app(PublicIntegrationResolver::class)->enabledConfigs(),
             'defaultSocialImageUrl' => $socialImageId ? Media::query()->find($socialImageId)?->url : null,
             'theme' => $themes->settingsFor($themes->active(), $settings->get('theme', [])),

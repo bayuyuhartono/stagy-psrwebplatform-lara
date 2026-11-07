@@ -60,6 +60,7 @@
             </div>
 
             <aside class="grid content-start gap-5">
+                <x-cms.translation-panel />
                 <section class="grid gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
                     <h3 class="font-bold text-cms-navy">Publishing</h3>
                     <label class="grid gap-2">

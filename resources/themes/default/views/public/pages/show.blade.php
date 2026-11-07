@@ -1,4 +1,4 @@
-<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="route('website.pages.show', $page->slug)">
+<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="localized_route('website.pages.show', $page->slug)">
     <section class="relative overflow-hidden bg-public-ink pb-24 pt-40 text-white lg:pb-32 lg:pt-52">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-public-surface),transparent_50%)] opacity-40"></div>
         <div class="relative mx-auto max-w-4xl px-5 text-center sm:px-8 lg:px-10">

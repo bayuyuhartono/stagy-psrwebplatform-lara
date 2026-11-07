@@ -15,8 +15,8 @@ class SitemapRepository
     public function publishedContent(): Collection
     {
         return new Collection([
-            ...$this->published(Page::class)->all(),
-            ...$this->published(Post::class, ['type'])->all(),
+            ...$this->published(Page::class, ['locale'])->all(),
+            ...$this->published(Post::class, ['type', 'locale'])->all(),
             ...$this->published(Service::class)->all(),
             ...$this->published(Portfolio::class)->all(),
         ]);

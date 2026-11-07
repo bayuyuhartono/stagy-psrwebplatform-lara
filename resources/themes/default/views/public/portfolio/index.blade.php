@@ -1,10 +1,10 @@
-<x-public.layout :settings="$settings" :menu="$menu" meta-title="Portfolio — Pesoros" meta-description="Selected digital products, platforms, and experiences created by Pesoros." :canonical="route('website.portfolio.index')">
+<x-public.layout :settings="$settings" :menu="$menu" meta-title="Portfolio — Pesoros" meta-description="Selected digital products, platforms, and experiences created by Pesoros." :canonical="localized_route('website.portfolio.index')">
     <section class="relative overflow-hidden bg-public-ink pb-24 pt-40 text-white lg:pb-32 lg:pt-52"><div class="absolute -right-20 top-20 size-[32rem] rotate-12 rounded-[5rem] border border-white/10"></div><div class="absolute right-16 top-48 size-40 rounded-[3rem] bg-public-surface sm:right-36 sm:size-56"></div><div class="relative mx-auto max-w-7xl px-5 sm:px-8 lg:px-10"><p class="public-reveal text-xs font-bold uppercase tracking-[0.22em] text-public-accent">Selected work</p><div class="mt-6 grid gap-10 lg:grid-cols-[1fr_26rem] lg:items-end"><h1 class="public-reveal text-6xl font-semibold leading-[0.88] tracking-[-0.06em] sm:text-8xl lg:text-9xl">Proof is in the work.</h1><p class="public-reveal text-lg leading-8 text-white/55">A selection of partnerships where strategy, design, and technology came together to create meaningful progress.</p></div></div></section>
     <section class="bg-public-paper">
         <div class="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-32">
             <div class="grid gap-x-7 gap-y-16 md:grid-cols-2">
                 @forelse ($projects as $project)
-                    <a href="{{ route('website.portfolio.show', $project->slug) }}" class="public-reveal group block {{ $loop->even ? 'md:mt-28' : '' }}">
+                    <a href="{{ localized_route('website.portfolio.show', $project->slug) }}" class="public-reveal group block {{ $loop->even ? 'md:mt-28' : '' }}">
                         <div class="relative aspect-[4/3] overflow-hidden rounded-[1.75rem] bg-public-ink">
                             @if ($project->coverImage)
                                 <img src="{{ Storage::disk($project->coverImage->disk)->url($project->coverImage->path) }}" alt="{{ $project->coverImage->alt_text ?? $project->title }}" class="h-full w-full object-cover transition duration-700 group-hover:scale-105">

@@ -1,5 +1,6 @@
 <?php
 
+use App\Features\Localization\Services\LocaleRegistry;
 use App\Http\Controllers\Cms\AuditLogController as CmsAuditLogController;
 use App\Http\Controllers\Cms\AuthController as CmsAuthController;
 use App\Http\Controllers\Cms\ContactMessageController as CmsContactMessageController;
@@ -31,26 +32,38 @@ Route::get('robots.txt', RobotsController::class)
     ->middleware('throttle:public-api')
     ->name('seo.robots');
 
-Route::get('/', HomeController::class)->name('home');
-Route::controller(ServicePageController::class)->middleware('feature:services')->group(function (): void {
-    Route::get('services', 'index')->name('website.services.index');
-    Route::get('services/{slug}', 'show')->name('website.services.show');
-});
-Route::controller(PortfolioPageController::class)->middleware('feature:portfolio')->group(function (): void {
-    Route::get('portfolio', 'index')->name('website.portfolio.index');
-    Route::get('portfolio/{slug}', 'show')->name('website.portfolio.show');
-});
-Route::controller(PostPageController::class)->middleware('feature:posts')->group(function (): void {
-    Route::get('blog', 'blog')->name('website.blog.index');
-    // Archive routes must precede the {slug} catch-alls or "category" is read as a post slug.
-    Route::get('blog/category/{slug}', 'blogCategory')->name('website.blog.category');
-    Route::get('blog/tag/{slug}', 'blogTag')->name('website.blog.tag');
-    Route::get('blog/{slug}', 'blogPost')->name('website.blog.show');
-    Route::get('news', 'news')->name('website.news.index');
-    Route::get('news/category/{slug}', 'newsCategory')->name('website.news.category');
-    Route::get('news/tag/{slug}', 'newsTag')->name('website.news.tag');
-    Route::get('news/{slug}', 'newsPost')->name('website.news.show');
-});
+/*
+| Public website routes are registered once per supported locale. The default
+| locale is served at the root under the plain route names ("home"); every other
+| locale is served under its own prefix with prefixed names ("en.home").
+*/
+$publicWebsite = function (): void {
+    Route::get('/', HomeController::class)->name('home');
+    Route::controller(ServicePageController::class)->middleware('feature:services')->group(function (): void {
+        Route::get('services', 'index')->name('website.services.index');
+        Route::get('services/{slug}', 'show')->name('website.services.show');
+    });
+    Route::controller(PortfolioPageController::class)->middleware('feature:portfolio')->group(function (): void {
+        Route::get('portfolio', 'index')->name('website.portfolio.index');
+        Route::get('portfolio/{slug}', 'show')->name('website.portfolio.show');
+    });
+    Route::controller(PostPageController::class)->middleware('feature:posts')->group(function (): void {
+        Route::get('blog', 'blog')->name('website.blog.index');
+        // Archive routes must precede the {slug} catch-alls or "category" is read as a post slug.
+        Route::get('blog/category/{slug}', 'blogCategory')->name('website.blog.category');
+        Route::get('blog/tag/{slug}', 'blogTag')->name('website.blog.tag');
+        Route::get('blog/{slug}', 'blogPost')->name('website.blog.show');
+        Route::get('news', 'news')->name('website.news.index');
+        Route::get('news/category/{slug}', 'newsCategory')->name('website.news.category');
+        Route::get('news/tag/{slug}', 'newsTag')->name('website.news.tag');
+        Route::get('news/{slug}', 'newsPost')->name('website.news.show');
+    });
+    Route::get('contact', [ContactPageController::class, 'show'])->name('website.contact');
+};
+
+$locales = app(LocaleRegistry::class);
+
+Route::middleware('locale:'.$locales->default())->group($publicWebsite);
 
 Route::middleware('guest')->prefix('cms')->name('cms.')->group(function (): void {
     Route::get('login', [CmsAuthController::class, 'create'])->name('login');
@@ -96,9 +109,20 @@ Route::middleware('auth')->prefix('cms')->name('cms.')->group(function (): void 
     Route::post('logout', [CmsAuthController::class, 'destroy'])->name('logout');
 });
 
-Route::get('contact', [ContactPageController::class, 'show'])->name('website.contact');
+foreach ($locales->prefixed() as $locale) {
+    Route::prefix($locale)->name("{$locale}.")->middleware("locale:{$locale}")->group(function () use ($publicWebsite): void {
+        $publicWebsite();
+        Route::get('{slug}', [PageController::class, 'show'])
+            ->where('slug', '.*')
+            ->middleware('feature:pages')
+            ->name('website.pages.show');
+    });
+}
+
+// The root catch-all must not swallow the reserved prefixes or another locale's pages.
+$reservedPrefixes = implode('|', ['cms', 'api', 'sitemap\\.xml', 'robots\\.txt', ...$locales->prefixed()]);
 
 Route::get('{slug}', [PageController::class, 'show'])
-    ->where('slug', '^(?!cms|api|sitemap\.xml|robots\.txt).*$')
-    ->middleware('feature:pages')
+    ->where('slug', "^(?!(?:{$reservedPrefixes})(?:/|$)).*$")
+    ->middleware(['locale:'.$locales->default(), 'feature:pages'])
     ->name('website.pages.show');

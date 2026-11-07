@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Admin;
 
+use App\Http\Requests\Concerns\ValidatesTranslations;
 use App\Models\Category;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class UpdateCategoryRequest extends FormRequest
 {
+    use ValidatesTranslations;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -26,7 +29,8 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'slug' => ['sometimes', 'required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Category::class)->withoutTrashed()->ignore($this->route('category'))],
+            'slug' => ['sometimes', 'required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Category::class)->where('locale', $this->route('category')->locale)->withoutTrashed()->ignore($this->route('category'))],
+            ...$this->immutableTranslationRules(),
         ];
     }
 }

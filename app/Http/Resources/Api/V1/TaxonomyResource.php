@@ -18,6 +18,8 @@ class TaxonomyResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'locale' => $this->whenHas('locale'),
+            'translation_group_id' => $this->whenHas('translation_group_id'),
             'posts_count' => $this->whenCounted('posts'),
             'portfolios_count' => $this->whenCounted('portfolios'),
         ];

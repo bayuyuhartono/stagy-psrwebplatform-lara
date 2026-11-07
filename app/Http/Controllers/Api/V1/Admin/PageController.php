@@ -50,7 +50,7 @@ class PageController extends Controller
     {
         Gate::authorize('view', $page);
 
-        return new PageResource($page);
+        return new PageResource($page->load('translations'));
     }
 
     /**

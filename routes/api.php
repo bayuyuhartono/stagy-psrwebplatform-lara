@@ -43,34 +43,34 @@ use App\Http\Controllers\Api\V1\Public\WebsiteSettingController as PublicWebsite
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
-    Route::prefix('public')->middleware(['throttle:public-api', 'feature:pages'])->group(function (): void {
+    Route::prefix('public')->middleware(['throttle:public-api', 'locale', 'feature:pages'])->group(function (): void {
         Route::get('pages/{slug}', [PublicPageController::class, 'show'])->name('api.v1.public.pages.show');
     });
     Route::get('public/menus/{location}', [PublicMenuController::class, 'show'])
-        ->middleware(['throttle:public-api', 'feature:menus'])
+        ->middleware(['throttle:public-api', 'locale', 'feature:menus'])
         ->name('api.v1.public.menus.show');
-    Route::middleware(['throttle:public-api', 'feature:posts'])->prefix('public/posts')->group(function (): void {
+    Route::middleware(['throttle:public-api', 'locale', 'feature:posts'])->prefix('public/posts')->group(function (): void {
         Route::get('/', [PublicPostController::class, 'index'])->name('api.v1.public.posts.index');
         Route::get('{slug}', [PublicPostController::class, 'show'])->name('api.v1.public.posts.show');
     });
-    Route::middleware(['throttle:public-api', 'feature:services'])->prefix('public/services')->group(function (): void {
+    Route::middleware(['throttle:public-api', 'locale', 'feature:services'])->prefix('public/services')->group(function (): void {
         Route::get('/', [PublicServiceController::class, 'index'])->name('api.v1.public.services.index');
         Route::get('{slug}', [PublicServiceController::class, 'show'])->name('api.v1.public.services.show');
     });
-    Route::middleware(['throttle:public-api', 'feature:portfolio'])->prefix('public/portfolio')->group(function (): void {
+    Route::middleware(['throttle:public-api', 'locale', 'feature:portfolio'])->prefix('public/portfolio')->group(function (): void {
         Route::get('/', [PublicPortfolioController::class, 'index'])->name('api.v1.public.portfolio.index');
         Route::get('{slug}', [PublicPortfolioController::class, 'show'])->name('api.v1.public.portfolio.show');
     });
     Route::post('public/contact-messages', [PublicContactMessageController::class, 'store'])
-        ->middleware(['throttle:contact-form', 'feature:contact-messages'])
+        ->middleware(['throttle:contact-form', 'locale', 'feature:contact-messages'])
         ->name('api.v1.public.contact-messages.store');
-    Route::get('public/categories', [TaxonomyController::class, 'categories'])->middleware('throttle:public-api');
-    Route::get('public/tags', [TaxonomyController::class, 'tags'])->middleware('throttle:public-api');
+    Route::get('public/categories', [TaxonomyController::class, 'categories'])->middleware(['throttle:public-api', 'locale']);
+    Route::get('public/tags', [TaxonomyController::class, 'tags'])->middleware(['throttle:public-api', 'locale']);
     Route::get('public/website-settings', [PublicWebsiteSettingController::class, 'index'])
-        ->middleware(['throttle:public-api', 'feature:website-settings'])
+        ->middleware(['throttle:public-api', 'locale', 'feature:website-settings'])
         ->name('api.v1.public.website-settings.index');
     Route::get('public/integrations', [PublicIntegrationController::class, 'index'])
-        ->middleware(['throttle:public-api', 'feature:integrations'])
+        ->middleware(['throttle:public-api', 'locale', 'feature:integrations'])
         ->name('api.v1.public.integrations.index');
 
     Route::prefix('admin')->group(function (): void {

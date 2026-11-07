@@ -15,10 +15,24 @@ class TaxonomyRepository
         return $modelClass::query()->withCount(['posts', 'portfolios'])->orderBy('name')->paginate($perPage);
     }
 
-    /** @param class-string<Category|Tag> $modelClass */
+    /**
+     * Every term for public listings. Categories are translatable, so only the
+     * current locale's categories are returned; tags are shared across locales.
+     *
+     * @param  class-string<Category|Tag>  $modelClass
+     */
     public function all(string $modelClass): Collection
     {
-        return $modelClass::query()->withCount(['posts', 'portfolios'])->orderBy('name')->get();
+        return $modelClass::query()
+            ->when($modelClass === Category::class, fn ($query) => $query->forCurrentLocale())
+            ->withCount(['posts', 'portfolios'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function findCategoryBySlug(string $slug): Category
+    {
+        return Category::query()->forCurrentLocale()->where('slug', $slug)->firstOrFail();
     }
 
     /** @param class-string<Category|Tag> $modelClass

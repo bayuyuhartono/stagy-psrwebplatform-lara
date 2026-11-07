@@ -3,6 +3,7 @@
 namespace App\Features\Pages\Services;
 
 use App\Features\Audit\Services\AuditLogger;
+use App\Features\Localization\Services\TranslationLinker;
 use App\Features\Pages\Enums\PageStatus;
 use App\Features\Pages\Repositories\PageRepository;
 use App\Models\Page;
@@ -12,12 +13,13 @@ class PageService
     public function __construct(
         private PageRepository $pages,
         private AuditLogger $auditLogger,
+        private TranslationLinker $translations,
     ) {}
 
     /** @param array<string, mixed> $attributes */
     public function create(array $attributes): Page
     {
-        $attributes = $this->normalizePublication($attributes);
+        $attributes = $this->normalizePublication($this->translations->link(Page::class, $attributes));
         $page = $this->pages->create($attributes);
         $this->auditLogger->record('page.created', $page, newValues: $page->getAttributes());
 

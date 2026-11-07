@@ -192,12 +192,24 @@ document.addEventListener('click', (event) => {
     }
 });
 
+const cmsLocales = JSON.parse(document.querySelector('[data-cms-locales]')?.textContent || '{"default":"id","options":{}}');
+const localeLabel = (locale) => cmsLocales.options[locale]?.label ?? String(locale ?? '').toUpperCase();
+const localeName = (locale) => cmsLocales.options[locale]?.name ?? locale;
+const localeBadge = (locale) => {
+    const badge = document.createElement('span');
+    badge.className = 'inline-flex rounded-md bg-cms-navy/8 px-1.5 py-0.5 text-[0.65rem] font-bold tracking-wide text-cms-navy/70';
+    badge.textContent = localeLabel(locale);
+    badge.title = localeName(locale);
+    return badge;
+};
+
 const pagesList = document.querySelector('[data-pages-list]');
 
 if (pagesList) {
     const rows = pagesList.querySelector('[data-pages-rows]');
     const search = pagesList.querySelector('[data-pages-search]');
     const status = pagesList.querySelector('[data-pages-status]');
+    const locale = pagesList.querySelector('[data-pages-locale]');
     const summary = pagesList.querySelector('[data-pages-summary]');
     const previous = pagesList.querySelector('[data-pages-previous]');
     const next = pagesList.querySelector('[data-pages-next]');
@@ -218,8 +230,8 @@ if (pagesList) {
             title.className = 'font-semibold text-cms-navy';
             title.textContent = page.title;
             const slug = document.createElement('p');
-            slug.className = 'mt-1 text-xs text-cms-navy/40';
-            slug.textContent = `/${page.slug}`;
+            slug.className = 'mt-1 flex items-center gap-2 text-xs text-cms-navy/40';
+            slug.append(localeBadge(page.locale), `/${page.slug}`);
             pageCell.append(title, slug);
 
             const statusCell = document.createElement('td');
@@ -274,6 +286,7 @@ if (pagesList) {
         const params = new URLSearchParams({ page: currentPage, per_page: 15 });
         if (search.value.trim()) params.set('search', search.value.trim());
         if (status.value) params.set('status', status.value);
+        if (locale.value) params.set('locale', locale.value);
 
         apiRequest(`/api/v1/admin/pages?${params}`)
             .then(renderPages)
@@ -288,7 +301,7 @@ if (pagesList) {
         currentPage = 1;
         debounce = window.setTimeout(loadPages, 250);
     });
-    status.addEventListener('change', () => { currentPage = 1; loadPages(); });
+    [status, locale].forEach((select) => select.addEventListener('change', () => { currentPage = 1; loadPages(); }));
     previous.addEventListener('click', () => { currentPage -= 1; loadPages(); });
     next.addEventListener('click', () => { currentPage += 1; loadPages(); });
     loadPages();
@@ -301,6 +314,7 @@ if (postsList) {
     const search = postsList.querySelector('[data-posts-search]');
     const type = postsList.querySelector('[data-posts-type]');
     const status = postsList.querySelector('[data-posts-status]');
+    const locale = postsList.querySelector('[data-posts-locale]');
     const summary = postsList.querySelector('[data-posts-summary]');
     const previous = postsList.querySelector('[data-posts-previous]');
     const next = postsList.querySelector('[data-posts-next]');
@@ -314,6 +328,7 @@ if (postsList) {
         if (search.value.trim()) params.set('search', search.value.trim());
         if (type.value) params.set('type', type.value);
         if (status.value) params.set('status', status.value);
+        if (locale.value) params.set('locale', locale.value);
         apiRequest(`/api/v1/admin/posts?${params}`).then((payload) => {
             rows.replaceChildren();
             payload.data.forEach((post) => {
@@ -322,7 +337,7 @@ if (postsList) {
                 const content = document.createElement('td');
                 content.className = 'px-5 py-4';
                 const title = document.createElement('p'); title.className = 'font-semibold text-cms-navy'; title.textContent = post.title;
-                const excerpt = document.createElement('p'); excerpt.className = 'mt-1 max-w-xl truncate text-xs text-cms-navy/40'; excerpt.textContent = post.excerpt || `/${post.slug}`;
+                const excerpt = document.createElement('p'); excerpt.className = 'mt-1 flex max-w-xl items-center gap-2 truncate text-xs text-cms-navy/40'; excerpt.append(localeBadge(post.locale), post.excerpt || `/${post.slug}`);
                 content.append(title, excerpt);
                 const typeCell = document.createElement('td'); typeCell.className = 'px-5 py-4 text-sm capitalize text-cms-navy/60'; typeCell.textContent = post.type;
                 const statusCell = document.createElement('td'); statusCell.className = 'px-5 py-4';
@@ -337,7 +352,7 @@ if (postsList) {
             previous.disabled = payload.meta.current_page <= 1; next.disabled = payload.meta.current_page >= payload.meta.last_page; error.classList.add('hidden');
         }).catch(() => { error.textContent = 'Posts could not be loaded.'; error.classList.remove('hidden'); });
     };
-    [type, status].forEach((select) => select.addEventListener('change', () => { currentPage = 1; loadPosts(); }));
+    [type, status, locale].forEach((select) => select.addEventListener('change', () => { currentPage = 1; loadPosts(); }));
     search.addEventListener('input', () => { window.clearTimeout(debounce); currentPage = 1; debounce = window.setTimeout(loadPosts, 250); });
     previous.addEventListener('click', () => { currentPage -= 1; loadPosts(); }); next.addEventListener('click', () => { currentPage += 1; loadPosts(); });
     loadPosts();
@@ -1140,6 +1155,7 @@ if (menuManager) {
     const menuId = menuManager.querySelector('[data-menu-id]');
     const menuName = menuManager.querySelector('[data-menu-name]');
     const menuLocation = menuManager.querySelector('[data-menu-location]');
+    const menuLocale = menuManager.querySelector('[data-menu-locale]');
     const menuActive = menuManager.querySelector('[data-menu-active]');
     const menuSave = menuManager.querySelector('[data-menu-save]');
     const menuDelete = menuManager.querySelector('[data-menu-delete]');
@@ -1266,7 +1282,7 @@ if (menuManager) {
             name.textContent = menu.name;
             const location = document.createElement('span');
             location.className = menu.id === activeMenu?.id ? 'mt-1 block truncate text-xs text-white/55' : 'mt-1 block truncate text-xs text-cms-navy/40';
-            location.textContent = `${menu.location} · ${menu.is_active ? 'Active' : 'Inactive'}`;
+            location.textContent = `${localeLabel(menu.locale)} · ${menu.location} · ${menu.is_active ? 'Active' : 'Inactive'}`;
             button.append(name, location);
             button.addEventListener('click', () => selectMenu(menu.id));
             menuList.append(button);
@@ -1291,6 +1307,8 @@ if (menuManager) {
             menuId.value = activeMenu.id;
             menuName.value = activeMenu.name;
             menuLocation.value = activeMenu.location;
+            menuLocale.value = activeMenu.locale;
+            menuLocale.disabled = true;
             menuActive.checked = activeMenu.is_active;
             [menuName, menuLocation, menuActive].forEach((input) => { input.disabled = !canUpdate; });
             menuSave.classList.toggle('hidden', !canUpdate);
@@ -1316,7 +1334,8 @@ if (menuManager) {
         activeMenu = null;
         menuForm.reset();
         menuId.value = '';
-        [menuName, menuLocation, menuActive].forEach((input) => { input.disabled = false; });
+        [menuName, menuLocation, menuActive, menuLocale].forEach((input) => { input.disabled = false; });
+        menuLocale.value = cmsLocales.default;
         menuActive.checked = true;
         menuSave.classList.toggle('hidden', !canCreate);
         menuDelete.classList.add('hidden');
@@ -1334,7 +1353,12 @@ if (menuManager) {
         try {
             const payload = await apiRequest(id ? `/api/v1/admin/menus/${id}` : '/api/v1/admin/menus', {
                 method: id ? 'PUT' : 'POST',
-                body: JSON.stringify({ name: menuName.value.trim(), location: menuLocation.value.trim(), is_active: menuActive.checked }),
+                body: JSON.stringify({
+                    name: menuName.value.trim(),
+                    location: menuLocation.value.trim(),
+                    is_active: menuActive.checked,
+                    ...(id ? {} : { locale: menuLocale.value }),
+                }),
             });
             await loadMenus();
             await selectMenu(payload.data.id);
@@ -1419,6 +1443,11 @@ if (pageEditor) {
     const portfolioCoverCopy = pageEditor.querySelector('[data-portfolio-cover-copy]');
     const portfolioCategories = pageEditor.querySelector('[data-portfolio-categories]');
     const portfolioTags = pageEditor.querySelector('[data-portfolio-tags]');
+    const contentLocale = pageEditor.querySelector('[data-content-locale]');
+    const translationSource = pageEditor.querySelector('[data-translation-source]');
+    const translationList = pageEditor.querySelector('[data-translation-list]');
+    const editorQuery = new URLSearchParams(window.location.search);
+    const translationOf = !pageId && contentLocale ? editorQuery.get('translation_of') : null;
     let slugWasEdited = Boolean(pageId);
     let blockDefinitions = {};
 
@@ -1601,14 +1630,65 @@ if (pageEditor) {
         };
     });
 
+    function editorLocale() {
+        if (!contentLocale) return cmsLocales.default;
+        if (!pageId && cmsLocales.options[editorQuery.get('locale')]) return editorQuery.get('locale');
+        return contentLocale.value || cmsLocales.default;
+    }
+
+    // Categories are per-language, so the post's category list follows its language.
+    const reloadCategories = async (locale, selectedIds = []) => {
+        if (!postCategories) return;
+        const payload = await apiRequest(`/api/v1/public/categories?locale=${encodeURIComponent(locale)}`);
+        postCategories.replaceChildren();
+        payload.data.forEach((category) => {
+            const option = new Option(category.name, category.id);
+            option.selected = selectedIds.includes(category.id);
+            postCategories.append(option);
+        });
+    };
+
+    const renderTranslations = (page) => {
+        if (!translationList) return;
+        translationList.querySelectorAll('[data-translation-item]').forEach((item) => item.remove());
+        Object.keys(cmsLocales.options).filter((locale) => locale !== page.locale).forEach((locale) => {
+            const translation = (page.translations ?? []).find((candidate) => candidate.locale === locale);
+            const link = document.createElement('a');
+            link.dataset.translationItem = '';
+            link.className = 'flex items-center gap-2 rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-xs font-semibold text-cms-navy hover:border-cms-gold';
+            if (translation) {
+                link.href = `/cms/${resource}/${translation.id}/edit`;
+                const title = document.createElement('span');
+                title.className = 'min-w-0 flex-1 truncate';
+                title.textContent = translation.title;
+                const state = document.createElement('span');
+                state.className = 'text-cms-navy/40';
+                state.textContent = translation.status ?? '';
+                link.append(localeBadge(locale), title, state);
+            } else {
+                link.href = `/cms/${resource}/create?translation_of=${encodeURIComponent(page.id)}&locale=${encodeURIComponent(locale)}`;
+                const label = document.createElement('span');
+                label.className = 'text-cms-green';
+                label.textContent = `+ Add ${localeName(locale)} translation`;
+                link.append(localeBadge(locale), label);
+            }
+            translationList.append(link);
+        });
+        translationList.classList.remove('hidden');
+    };
+
     const loadEditor = async () => {
         try {
             const [schemaPayload, pagePayload, categoriesPayload, tagsPayload] = await Promise.all([
                 apiRequest('/api/v1/admin/content-blocks/schema'),
                 pageId ? apiRequest(`/api/v1/admin/${resource}/${pageId}`) : Promise.resolve(null),
-                ['posts', 'portfolio'].includes(resource) ? apiRequest('/api/v1/public/categories') : Promise.resolve(null),
+                ['posts', 'portfolio'].includes(resource) ? apiRequest(`/api/v1/public/categories?locale=${encodeURIComponent(editorLocale())}`) : Promise.resolve(null),
                 ['posts', 'portfolio'].includes(resource) ? apiRequest('/api/v1/public/tags') : Promise.resolve(null),
             ]);
+            if (contentLocale) {
+                contentLocale.value = editorLocale();
+                contentLocale.disabled = Boolean(pageId || translationOf);
+            }
             blockDefinitions = schemaPayload.data;
             Object.entries(blockDefinitions).forEach(([type, definition]) => {
                 const option = document.createElement('option');
@@ -1656,6 +1736,22 @@ if (pageEditor) {
                 if (portfolioCategories) [...portfolioCategories.options].forEach((option) => { option.selected = page.categories.some((category) => category.id === option.value); });
                 if (portfolioTags) [...portfolioTags.options].forEach((option) => { option.selected = page.tags.some((tag) => tag.id === option.value); });
                 page.blocks.forEach((block) => addBlock(block.type, block.data, block.id));
+                if (contentLocale) {
+                    contentLocale.value = page.locale;
+                    renderTranslations(page);
+                    await reloadCategories(page.locale, (page.categories ?? []).map((category) => category.id));
+                }
+            }
+            if (translationOf) {
+                // Start the translation from a copy of the source so only the wording needs changing.
+                const source = (await apiRequest(`/api/v1/admin/${resource}/${encodeURIComponent(translationOf)}`)).data;
+                titleInput.value = source.title;
+                if (postExcerpt) postExcerpt.value = source.excerpt ?? '';
+                if (postType) postType.value = source.type;
+                if (postTags) [...postTags.options].forEach((option) => { option.selected = (source.tags ?? []).some((tag) => tag.id === option.value); });
+                source.blocks.forEach((block) => addBlock(block.type, block.data));
+                translationSource.textContent = `Translating “${source.title}” (${localeName(source.locale)}) into ${localeName(editorLocale())}. Write the URL slug in the new language.`;
+                translationSource.classList.remove('hidden');
             }
         } catch (error) {
             showNotice('The page editor could not be loaded. Check your permissions and feature flags.');
@@ -1663,6 +1759,7 @@ if (pageEditor) {
         }
     };
 
+    contentLocale?.addEventListener('change', () => { reloadCategories(contentLocale.value).catch(() => {}); });
     titleInput.addEventListener('input', () => {
         if (!slugWasEdited) slugInput.value = titleInput.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     });
@@ -1681,6 +1778,10 @@ if (pageEditor) {
                 status: statusInput.value,
                 blocks: serializeBlocks(),
             };
+            if (contentLocale && !pageId) {
+                requestPayload.locale = editorLocale();
+                if (translationOf) requestPayload.translation_of = translationOf;
+            }
             if (resource === 'posts') {
                 requestPayload.type = postType.value;
                 requestPayload.excerpt = postExcerpt.value.trim() || null;
@@ -2261,6 +2362,8 @@ if (taxonomyManager) {
     const idInput = taxonomyManager.querySelector('[data-taxonomy-id]');
     const nameInput = taxonomyManager.querySelector('[data-taxonomy-name]');
     const slugInput = taxonomyManager.querySelector('[data-taxonomy-slug]');
+    const localeInput = taxonomyManager.querySelector('[data-taxonomy-locale]');
+    const localeField = taxonomyManager.querySelector('[data-taxonomy-locale-field]');
     const formTitle = taxonomyManager.querySelector('[data-taxonomy-form-title]');
     const deleteButton = taxonomyManager.querySelector('[data-taxonomy-delete]');
     const saveButton = taxonomyManager.querySelector('[data-taxonomy-save]');
@@ -2288,6 +2391,10 @@ if (taxonomyManager) {
         idInput.value = taxonomy?.id || '';
         nameInput.value = taxonomy?.name || '';
         slugInput.value = taxonomy?.slug || '';
+        // Categories are written per language; tags are shared by every language.
+        localeField.classList.toggle('hidden', resource !== 'categories');
+        localeInput.value = taxonomy?.locale || cmsLocales.default;
+        localeInput.disabled = isEditing;
         slugWasEdited = isEditing;
         formTitle.textContent = isEditing ? `Edit ${singular()}` : `New ${singular()}`;
         deleteButton.classList.toggle('hidden', !isEditing || !canDelete);
@@ -2313,8 +2420,9 @@ if (taxonomyManager) {
             name.className = 'font-semibold text-cms-navy';
             name.textContent = taxonomy.name;
             const slug = document.createElement('p');
-            slug.className = 'mt-1 font-mono text-xs text-cms-navy/40';
-            slug.textContent = taxonomy.slug;
+            slug.className = 'mt-1 flex items-center gap-2 font-mono text-xs text-cms-navy/40';
+            if (taxonomy.locale) slug.append(localeBadge(taxonomy.locale));
+            slug.append(taxonomy.slug);
             nameCell.append(name, slug);
             const postsCell = document.createElement('td');
             postsCell.className = 'px-5 py-4 text-sm text-cms-navy/60';
@@ -2406,7 +2514,11 @@ if (taxonomyManager) {
         try {
             await apiRequest(`/api/v1/admin/${resource}${id ? `/${id}` : ''}`, {
                 method: id ? 'PUT' : 'POST',
-                body: JSON.stringify({ name: nameInput.value.trim(), slug: slugInput.value.trim() }),
+                body: JSON.stringify({
+                    name: nameInput.value.trim(),
+                    slug: slugInput.value.trim(),
+                    ...(!idInput.value && resource === 'categories' ? { locale: localeInput.value } : {}),
+                }),
             });
             closeTaxonomyDialog();
             showTaxonomyNotice(`${singular().replace(/^./, (letter) => letter.toUpperCase())} saved successfully.`);

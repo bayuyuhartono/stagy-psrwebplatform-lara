@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Features\Localization\Concerns\HasTranslations;
 use App\Features\Pages\Enums\PageStatus;
 use Database\Factories\PageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasTranslations, HasUuids, SoftDeletes;
 
     protected $attributes = ['status' => 'draft', 'blocks' => '[]'];
 

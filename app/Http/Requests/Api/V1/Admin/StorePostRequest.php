@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\V1\Admin;
 use App\Features\ContentBlocks\ContentBlockRegistry;
 use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Enums\PostType;
+use App\Http\Requests\Concerns\ValidatesTranslations;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
@@ -15,6 +16,8 @@ use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
+    use ValidatesTranslations;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -32,7 +35,7 @@ class StorePostRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Post::class)],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash:ascii', Rule::unique(Post::class)->where('locale', $this->requestedLocale())],
             'type' => ['required', Rule::enum(PostType::class)],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'excerpt' => ['nullable', 'string', 'max:1000'],
@@ -42,6 +45,7 @@ class StorePostRequest extends FormRequest
             'category_ids.*' => ['uuid', 'distinct:strict', Rule::exists(Category::class, 'id')],
             'tag_ids' => ['sometimes', 'array', 'max:50'],
             'tag_ids.*' => ['uuid', 'distinct:strict', Rule::exists(Tag::class, 'id')],
+            ...$this->translationRules(Post::class),
         ];
     }
 }

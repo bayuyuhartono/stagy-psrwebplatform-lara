@@ -5,10 +5,11 @@
             @can('create', App\Models\Post::class)<a href="{{ route('cms.posts.create') }}" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cms-gold px-5 text-sm font-bold text-cms-navy"><span class="text-lg">+</span> New post</a>@endcan
         </div>
         <div class="rounded-2xl border border-cms-navy/8 bg-white/70 shadow-sm">
-            <div class="grid gap-3 border-b border-cms-navy/8 p-4 sm:grid-cols-[1fr_10rem_10rem] sm:p-5">
+            <div class="grid gap-3 border-b border-cms-navy/8 p-4 sm:grid-cols-[1fr_10rem_10rem_10rem] sm:p-5">
                 <input data-posts-search type="search" placeholder="Search title or excerpt…" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-4 text-sm outline-none focus:border-cms-gold">
                 <select data-posts-type class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm"><option value="">All types</option><option value="blog">Blog</option><option value="news">News</option></select>
                 <select data-posts-status class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm"><option value="">All statuses</option><option value="published">Published</option><option value="draft">Draft</option></select>
+                <select data-posts-locale aria-label="Language" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm"><option value="">All languages</option>@foreach (app(\App\Features\Localization\Services\LocaleRegistry::class)->options() as $code => $locale)<option value="{{ $code }}">{{ $locale['name'] }}</option>@endforeach</select>
             </div>
             <div data-posts-error class="m-4 hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"></div>
             <div class="overflow-x-auto"><table class="w-full min-w-3xl text-left"><thead class="text-[0.68rem] font-semibold tracking-[0.14em] text-cms-navy/40 uppercase"><tr><th class="px-5 py-3">Post</th><th class="px-5 py-3">Type</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Action</th></tr></thead><tbody data-posts-rows class="divide-y divide-cms-navy/6"><tr><td colspan="4" class="px-5 py-10 text-center text-sm text-cms-navy/45">Loading posts…</td></tr></tbody></table></div>

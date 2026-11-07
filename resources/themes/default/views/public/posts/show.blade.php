@@ -1,11 +1,11 @@
-<x-public.layout :page="$post" :settings="$settings" :menu="$menu" :meta-title="$post->title" :meta-description="$post->excerpt" :canonical="route('website.'.$type->value.'.show', $post->slug)">
+<x-public.layout :page="$post" :settings="$settings" :menu="$menu" :meta-title="$post->title" :meta-description="$post->excerpt" :canonical="localized_route('website.'.$type->value.'.show', $post->slug)">
     <article>
         <header class="bg-public-ink pb-16 pt-40 text-white lg:pb-24 lg:pt-52">
             <div class="mx-auto max-w-5xl px-5 sm:px-8 lg:px-10">
-                <a href="{{ route('website.'.$type->value.'.index') }}" class="public-reveal text-xs font-bold uppercase tracking-[0.2em] text-public-accent">← {{ $type->value === 'blog' ? 'All insights' : 'All news' }}</a>
+                <a href="{{ localized_route('website.'.$type->value.'.index') }}" class="public-reveal text-xs font-bold uppercase tracking-[0.2em] text-public-accent">← {{ $type->value === 'blog' ? 'All insights' : 'All news' }}</a>
                 <div class="public-reveal mt-10 flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-wide text-white/45">
                     @foreach ($post->categories as $category)
-                        <a href="{{ route('website.'.$type->value.'.category', $category->slug) }}" class="text-public-accent transition hover:underline">{{ $category->name }}</a>
+                        <a href="{{ localized_route('website.'.$type->value.'.category', $category->slug) }}" class="text-public-accent transition hover:underline">{{ $category->name }}</a>
                     @endforeach
                     <time datetime="{{ $post->published_at->toDateString() }}">{{ $post->published_at->format('d F Y') }}</time>
                     @if ($post->author)
@@ -38,7 +38,7 @@
                 <footer class="mx-auto max-w-4xl px-5 pb-20 sm:px-8 lg:pb-28">
                     <div class="public-reveal flex flex-wrap gap-2 border-t border-public-ink/10 pt-8">
                         @foreach ($post->tags as $tag)
-                            <a href="{{ route('website.'.$type->value.'.tag', $tag->slug) }}" class="rounded-full border border-public-ink/15 px-4 py-2 text-xs font-bold text-public-ink/55 transition hover:border-public-accent hover:text-public-ink">{{ $tag->name }}</a>
+                            <a href="{{ localized_route('website.'.$type->value.'.tag', $tag->slug) }}" class="rounded-full border border-public-ink/15 px-4 py-2 text-xs font-bold text-public-ink/55 transition hover:border-public-accent hover:text-public-ink">{{ $tag->name }}</a>
                         @endforeach
                     </div>
                 </footer>
@@ -49,7 +49,7 @@
     <section class="bg-public-accent">
         <div class="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-5 py-20 sm:px-8 lg:flex-row lg:items-end lg:px-10 lg:py-24">
             <h2 class="public-reveal max-w-3xl text-4xl font-semibold tracking-[-0.04em] sm:text-6xl">More ideas are already taking shape.</h2>
-            <a href="{{ route('website.'.$type->value.'.index') }}" class="public-reveal rounded-full bg-public-ink px-6 py-3.5 text-sm font-bold text-white">Keep reading ↗</a>
+            <a href="{{ localized_route('website.'.$type->value.'.index') }}" class="public-reveal rounded-full bg-public-ink px-6 py-3.5 text-sm font-bold text-white">Keep reading ↗</a>
         </div>
     </section>
 </x-public.layout>

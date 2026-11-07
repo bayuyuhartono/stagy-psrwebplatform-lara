@@ -8,7 +8,7 @@
 @php($siteName = $general['site_name'] ?? 'Pesoros')
 @php($title = $page?->seo?->meta_title ?? $metaTitle ?? $seoDefaults['default_title'] ?? $siteName)
 @php($description = $page?->seo?->meta_description ?? $metaDescription ?? $seoDefaults['default_description'] ?? ($general['tagline'] ?? 'Digital experiences built with purpose.'))
-@php($canonicalUrl = $page?->seo?->canonical_url ?? $canonical ?? route('home'))
+@php($canonicalUrl = $page?->seo?->canonical_url ?? $canonical ?? localized_route('home'))
 @php($ogImageUrl = $page?->seo?->ogImage?->url ?? ($defaultSocialImageUrl ?? null))
 @php($structuredData = $page?->seo?->structured_data)
 @php($integrations = $integrations ?? [])
@@ -16,7 +16,7 @@
 @php($headerIsSolid = ($theme['header_style'] ?? 'overlay') === 'solid')
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', $general['locale'] ?? app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,6 +25,12 @@
         <meta name="description" content="{{ $description }}">
         <meta name="robots" content="{{ ($page?->seo?->robots_index ?? true) ? 'index' : 'noindex' }},{{ ($page?->seo?->robots_follow ?? true) ? 'follow' : 'nofollow' }}">
         <link rel="canonical" href="{{ $canonicalUrl }}">
+        @if (count($alternateUrls ?? []) > 1)
+            @foreach ($alternateUrls as $alternateLocale => $alternateUrl)
+                <link rel="alternate" hreflang="{{ $alternateLocale }}" href="{{ $alternateUrl }}">
+            @endforeach
+            <link rel="alternate" hreflang="x-default" href="{{ $alternateUrls[config('localization.default')] ?? reset($alternateUrls) }}">
+        @endif
         <meta property="og:title" content="{{ $page?->seo?->og_title ?? $title }}">
         <meta property="og:description" content="{{ $page?->seo?->og_description ?? $description }}">
         <meta property="og:type" content="website">
@@ -57,7 +63,7 @@
             'sticky bg-public-ink' => $headerIsSolid,
         ])>
             <div class="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 sm:px-8 lg:px-10">
-                <a href="{{ route('home') }}" class="flex items-center gap-3 font-bold tracking-tight"><span class="grid size-10 place-items-center rounded-full bg-public-accent text-sm text-public-ink">P</span><span>{{ $siteName }}</span></a>
+                <a href="{{ localized_route('home') }}" class="flex items-center gap-3 font-bold tracking-tight"><span class="grid size-10 place-items-center rounded-full bg-public-accent text-sm text-public-ink">P</span><span>{{ $siteName }}</span></a>
                 <nav class="hidden items-center gap-7 text-sm font-semibold text-white/70 lg:flex" aria-label="Main navigation">
                     @forelse ($menu?->rootItems ?? [] as $item)
                         <a href="{{ $item->type->value === 'page' ? '/'.ltrim((string) $item->page?->slug, '/') : $item->url }}" target="{{ $item->target->value }}" class="transition hover:text-public-accent">{{ $item->label }}</a>

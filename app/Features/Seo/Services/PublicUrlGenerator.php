@@ -2,6 +2,7 @@
 
 namespace App\Features\Seo\Services;
 
+use App\Features\Localization\Services\LocaleRegistry;
 use App\Models\Page;
 use App\Models\Portfolio;
 use App\Models\Post;
@@ -19,8 +20,9 @@ class PublicUrlGenerator
             $content instanceof Portfolio => '/portfolio/'.$content->slug,
             default => '/',
         };
+        $locale = $content->getAttribute('locale');
 
-        return url($path);
+        return url(is_string($locale) ? (new LocaleRegistry)->localizePath($path, $locale) : $path);
     }
 
     public function canonicalFor(Model $content): string

@@ -5,7 +5,7 @@
     :menu="$menu"
     :meta-title="$archiveLabel ? $archiveLabel.' — '.($type->value === 'blog' ? 'Insights' : 'News') : ($type->value === 'blog' ? 'Insights — Pesoros' : 'News — Pesoros')"
     :meta-description="$archiveLabel ? 'Posts filed under '.$archive['term']->name.'.' : ($type->value === 'blog' ? 'Ideas and practical perspectives from the Pesoros team.' : 'Latest announcements and updates from Pesoros.')"
-    :canonical="$archive ? route('website.'.$type->value.'.'.$archive['taxonomy'], $archive['term']->slug) : route('website.'.$type->value.'.index')">
+    :canonical="$archive ? localized_route('website.'.$type->value.'.'.$archive['taxonomy'], $archive['term']->slug) : localized_route('website.'.$type->value.'.index')">
     <section class="relative overflow-hidden bg-public-ink pb-24 pt-40 text-white lg:pb-32 lg:pt-52">
         <div class="absolute -right-24 top-24 size-[30rem] rounded-full border border-white/10"></div>
         <div class="absolute right-20 top-48 size-36 rounded-full bg-public-accent sm:right-40 sm:size-52"></div>
@@ -16,7 +16,7 @@
                 <p class="public-reveal text-lg leading-8 text-white/55">{{ $archive ? 'Every '.$type->value.' post filed under '.$archive['term']->name.'.' : ($type->value === 'blog' ? 'Notes on strategy, design, technology, and building digital work that matters.' : 'Company milestones, project launches, and stories from inside the studio.') }}</p>
             </div>
             @if ($archive)
-                <a href="{{ route('website.'.$type->value.'.index') }}" class="public-reveal mt-8 inline-flex rounded-full border border-white/25 px-5 py-2.5 text-sm font-bold transition hover:border-public-accent hover:text-public-accent">← All {{ $type->value }} posts</a>
+                <a href="{{ localized_route('website.'.$type->value.'.index') }}" class="public-reveal mt-8 inline-flex rounded-full border border-white/25 px-5 py-2.5 text-sm font-bold transition hover:border-public-accent hover:text-public-accent">← All {{ $type->value }} posts</a>
             @endif
         </div>
     </section>
@@ -26,7 +26,7 @@
             <div class="grid gap-x-7 gap-y-16 md:grid-cols-2">
                 @forelse ($posts as $post)
                     <article class="public-reveal group {{ $loop->first ? 'md:col-span-2' : '' }}">
-                        <a href="{{ route('website.'.$type->value.'.show', $post->slug) }}" class="block">
+                        <a href="{{ localized_route('website.'.$type->value.'.show', $post->slug) }}" class="block">
                             <div class="relative overflow-hidden rounded-[1.75rem] bg-public-surface {{ $loop->first ? 'aspect-[16/8]' : 'aspect-[4/3]' }}">
                                 @if ($post->seo?->ogImage)
                                     <img src="{{ Storage::disk($post->seo->ogImage->disk)->url($post->seo->ogImage->path) }}" alt="{{ $post->seo->ogImage->alt_text ?? $post->title }}" class="h-full w-full object-cover transition duration-700 group-hover:scale-105">

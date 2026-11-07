@@ -7,6 +7,7 @@ use App\Features\Posts\Enums\PostType;
 use App\Models\Post;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PostRepository
 {
@@ -19,20 +20,30 @@ class PostRepository
     /** @param array<string, mixed> $filters */
     public function paginatePublished(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->filteredQuery($filters)->where('status', PostStatus::Published)->where('published_at', '<=', now())
+        return $this->filteredQuery($filters)->forCurrentLocale()->where('status', PostStatus::Published)->where('published_at', '<=', now())
             ->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage'])->latest('published_at')->paginate($perPage);
     }
 
     public function findPublishedBySlug(string $slug): Post
     {
-        return Post::query()->where('slug', $slug)->where('status', PostStatus::Published)->where('published_at', '<=', now())
-            ->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage'])->firstOrFail();
+        return Post::query()->forCurrentLocale()->where('slug', $slug)->where('status', PostStatus::Published)->where('published_at', '<=', now())
+            ->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage', 'translations' => $this->publishedTranslations(...)])->firstOrFail();
     }
 
     public function findPublishedBySlugAndType(string $slug, PostType $type): Post
     {
-        return Post::query()->where('slug', $slug)->where('type', $type)->where('status', PostStatus::Published)->where('published_at', '<=', now())
-            ->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage'])->firstOrFail();
+        return Post::query()->forCurrentLocale()->where('slug', $slug)->where('type', $type)->where('status', PostStatus::Published)->where('published_at', '<=', now())
+            ->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage', 'translations' => $this->publishedTranslations(...)])->firstOrFail();
+    }
+
+    /**
+     * Restrict an eager-loaded translation group to posts visitors can open.
+     *
+     * @param  HasMany<Post, Post>  $query
+     */
+    private function publishedTranslations(HasMany $query): void
+    {
+        $query->where('status', PostStatus::Published)->where('published_at', '<=', now());
     }
 
     /** @param array<string, mixed> $attributes */
@@ -55,6 +66,7 @@ class PostRepository
         return Post::query()
             ->when($filters['type'] ?? null, fn ($query, $type) => $query->where('type', $type))
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($filters['locale'] ?? null, fn ($query, $locale) => $query->forLocale($locale))
             ->when($filters['category'] ?? null, fn ($query, $slug) => $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('slug', $slug)))
             ->when($filters['tag'] ?? null, fn ($query, $slug) => $query->whereHas('tags', fn ($tagQuery) => $tagQuery->where('slug', $slug)))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($searchQuery) => $searchQuery->where('title', 'like', "%{$search}%")->orWhere('excerpt', 'like', "%{$search}%")));

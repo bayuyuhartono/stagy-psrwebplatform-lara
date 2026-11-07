@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Admin;
 
+use App\Features\Localization\Services\LocaleRegistry;
 use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Enums\PostType;
 use App\Models\Post;
@@ -32,6 +33,7 @@ class IndexPostRequest extends FormRequest
             'category' => ['sometimes', 'string', 'max:255'],
             'tag' => ['sometimes', 'string', 'max:255'],
             'search' => ['sometimes', 'string', 'max:255'],
+            'locale' => ['sometimes', Rule::in(app(LocaleRegistry::class)->supported())],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ];
     }

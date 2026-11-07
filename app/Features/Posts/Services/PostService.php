@@ -3,6 +3,7 @@
 namespace App\Features\Posts\Services;
 
 use App\Features\Audit\Services\AuditLogger;
+use App\Features\Localization\Services\TranslationLinker;
 use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Repositories\PostRepository;
 use App\Models\Post;
@@ -11,13 +12,17 @@ use Illuminate\Support\Facades\DB;
 
 class PostService
 {
-    public function __construct(private PostRepository $posts, private AuditLogger $auditLogger) {}
+    public function __construct(
+        private PostRepository $posts,
+        private AuditLogger $auditLogger,
+        private TranslationLinker $translations,
+    ) {}
 
     /** @param array<string, mixed> $attributes */
     public function create(array $attributes): Post
     {
         return DB::transaction(function () use ($attributes): Post {
-            [$postAttributes, $categoryIds, $tagIds] = $this->extractTaxonomies($this->normalizePublication($attributes));
+            [$postAttributes, $categoryIds, $tagIds] = $this->extractTaxonomies($this->normalizePublication($this->translations->link(Post::class, $attributes)));
             $post = $this->posts->create($postAttributes);
             $post->categories()->sync($categoryIds);
             $post->tags()->sync($tagIds);

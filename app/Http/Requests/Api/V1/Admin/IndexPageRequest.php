@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api\V1\Admin;
 
+use App\Features\Localization\Services\LocaleRegistry;
 use App\Features\Pages\Enums\PageStatus;
 use App\Models\Page;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -28,6 +29,7 @@ class IndexPageRequest extends FormRequest
         return [
             'search' => ['sometimes', 'string', 'max:255'],
             'status' => ['sometimes', Rule::enum(PageStatus::class)],
+            'locale' => ['sometimes', Rule::in(app(LocaleRegistry::class)->supported())],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
         ];
     }

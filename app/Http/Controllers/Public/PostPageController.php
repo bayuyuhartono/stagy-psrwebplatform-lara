@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Public;
 use App\Features\Menus\Repositories\MenuRepository;
 use App\Features\Posts\Enums\PostType;
 use App\Features\Posts\Repositories\PostRepository;
+use App\Features\Taxonomies\Repositories\TaxonomyRepository;
 use App\Features\WebsiteSettings\Repositories\WebsiteSettingRepository;
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Tag;
 use Illuminate\View\View;
 
@@ -16,6 +16,7 @@ class PostPageController extends Controller
     public function __construct(
         private WebsiteSettingRepository $websiteSettings,
         private MenuRepository $menus,
+        private TaxonomyRepository $taxonomies,
     ) {}
 
     public function blog(PostRepository $posts): View
@@ -75,8 +76,9 @@ class PostPageController extends Controller
      */
     private function archive(PostRepository $posts, PostType $type, string $taxonomy, string $slug): View
     {
-        $model = $taxonomy === 'category' ? Category::class : Tag::class;
-        $term = $model::query()->where('slug', $slug)->firstOrFail();
+        $term = $taxonomy === 'category'
+            ? $this->taxonomies->findCategoryBySlug($slug)
+            : Tag::query()->where('slug', $slug)->firstOrFail();
 
         return view('public.posts.index', [
             ...$this->layoutData(),
