@@ -33,7 +33,7 @@ class PostController extends Controller
     {
         Gate::authorize('view', $post);
 
-        return new PostResource($post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage', 'translations']));
+        return new PostResource($post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage', 'coverImage', 'translations']));
     }
 
     public function update(UpdatePostRequest $request, Post $post, UpdatePostAction $update): PostResource

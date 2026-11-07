@@ -19,8 +19,9 @@ class PageSeeder extends Seeder
     {
         foreach ($this->pages() as $page) {
             Page::query()->firstOrCreate(
-                ['slug' => $page['slug']],
+                ['slug' => $page['slug'], 'locale' => config('localization.default')],
                 [
+                    ...Page::translationDefaults(),
                     'title' => $page['title'],
                     'status' => PageStatus::Published,
                     'blocks' => $page['blocks'],

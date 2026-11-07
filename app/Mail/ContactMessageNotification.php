@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Features\ContactMessages\Enums\ContactFormType;
 use App\Models\ContactMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -31,8 +32,9 @@ class ContactMessageNotification extends Mailable
     {
         return new Envelope(
             from: $this->fromAddress ? new Address($this->fromAddress, $this->fromName) : null,
-            replyTo: [new Address($this->contactMessage->email, $this->contactMessage->name)],
-            subject: 'New contact message: '.$this->contactMessage->subject,
+            // Demo requests may come with only a WhatsApp number.
+            replyTo: filled($this->contactMessage->email) ? [new Address($this->contactMessage->email, $this->contactMessage->name)] : [],
+            subject: ($this->contactMessage->form_type === ContactFormType::Demo ? 'New demo request: ' : 'New contact message: ').$this->contactMessage->subject,
         );
     }
 

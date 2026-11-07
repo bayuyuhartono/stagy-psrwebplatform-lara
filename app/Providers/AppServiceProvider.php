@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Features\ContentBlocks\Services\ContentLinkResolver;
 use App\Features\Integrations\Services\PublicIntegrationResolver;
 use App\Features\Localization\Services\AlternateUrlResolver;
 use App\Features\Menus\Repositories\MenuRepository;
+use App\Features\Pricing\Services\PricingCatalog;
 use App\Features\Themes\Services\ThemeManager;
+use App\Features\Themes\Services\ThemeSettings;
 use App\Features\WebsiteSettings\Services\WhatsAppLink;
 use App\Models\Media;
 use App\Models\Page;
@@ -15,11 +18,13 @@ use App\Models\Seo;
 use App\Models\Service;
 use App\Models\User;
 use App\Observers\SitemapCacheObserver;
+use App\Rules\ContentLink;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -33,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ThemeManager::class);
+        $this->app->scoped(ContentLinkResolver::class);
+        $this->app->scoped(PricingCatalog::class);
+        $this->app->scoped(ThemeSettings::class);
     }
 
     /**
@@ -54,6 +62,8 @@ class AppServiceProvider extends ServiceProvider
         Service::observe(SitemapCacheObserver::class);
         Portfolio::observe(SitemapCacheObserver::class);
         Seo::observe(SitemapCacheObserver::class);
+
+        Validator::extend('content_link', fn (string $attribute, mixed $value): bool => is_string($value) && ContentLink::isValid($value), 'The :attribute must be a URL, a path starting with "/", an "#anchor", a mailto:/tel: link, or "whatsapp".');
 
         RateLimiter::for('public-api', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
 
@@ -90,7 +100,12 @@ class AppServiceProvider extends ServiceProvider
     private function composePublicLayout(ViewInstance $view): void
     {
         $settings = $view->getData()['settings'] ?? collect();
-        $socialImageId = $settings->get('seo', [])['social_image_id'] ?? null;
+        $branding = $settings->get('branding', []);
+        // One query for every image the layout may show.
+        $layoutMedia = Media::query()
+            ->whereKey(array_filter([$settings->get('seo', [])['social_image_id'] ?? null, $branding['logo_id'] ?? null, $branding['favicon_id'] ?? null]))
+            ->get()
+            ->keyBy('id');
         $themes = $this->app->make(ThemeManager::class);
         $content = $view->getData()['page'] ?? null;
         $alternates = $this->app->make(AlternateUrlResolver::class)->resolve(
@@ -109,7 +124,10 @@ class AppServiceProvider extends ServiceProvider
             ),
             'languageSwitcher' => $this->app->make(AlternateUrlResolver::class)->switcher($alternates),
             'integrations' => app(PublicIntegrationResolver::class)->enabledConfigs(),
-            'defaultSocialImageUrl' => $socialImageId ? Media::query()->find($socialImageId)?->url : null,
+            'defaultSocialImageUrl' => $layoutMedia->get($settings->get('seo', [])['social_image_id'] ?? '')?->url,
+            // Uploaded branding; themes fall back to their own bundled logo and favicon when these are null.
+            'brandLogoUrl' => $layoutMedia->get($branding['logo_id'] ?? '')?->url,
+            'brandFaviconUrl' => $layoutMedia->get($branding['favicon_id'] ?? '')?->url,
             'theme' => $themes->settingsFor($themes->active(), $settings->get('theme', [])),
         ]);
     }

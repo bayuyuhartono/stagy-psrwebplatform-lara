@@ -3,6 +3,7 @@
 namespace App\Features\ContactMessages\Services;
 
 use App\Features\Audit\Services\AuditLogger;
+use App\Features\ContactMessages\Enums\ContactFormType;
 use App\Features\ContactMessages\Repositories\ContactMessageRepository;
 use App\Jobs\SendContactMessageEmails;
 use App\Models\ContactMessage;
@@ -14,11 +15,29 @@ class ContactMessageService
     /** @param array<string, mixed> $attributes */
     public function submit(array $attributes): ContactMessage
     {
-        $message = $this->messages->create([...$attributes, 'submitted_at' => now()]);
+        $attributes = [...$attributes, 'locale' => $attributes['locale'] ?? app()->getLocale(), 'submitted_at' => now()];
+
+        if (($attributes['form_type'] ?? null) === ContactFormType::Demo->value) {
+            $attributes['subject'] ??= $this->demoSubject($attributes);
+        }
+
+        $message = $this->messages->create($attributes);
         $this->auditLogger->record('contact-message.submitted', $message, newValues: ['status' => $message->status->value]);
         SendContactMessageEmails::dispatch($message);
 
         return $message;
+    }
+
+    /**
+     * Demo requests carry no subject of their own; name them after who is asking.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function demoSubject(array $attributes): string
+    {
+        $requester = filled($attributes['company'] ?? null) ? $attributes['company'] : $attributes['name'];
+
+        return ($attributes['locale'] === 'id' ? 'Permintaan demo — ' : 'Demo request — ').$requester;
     }
 
     /** @param array<string, mixed> $attributes */

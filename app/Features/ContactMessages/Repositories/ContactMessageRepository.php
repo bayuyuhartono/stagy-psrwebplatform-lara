@@ -13,9 +13,13 @@ class ContactMessageRepository
         return ContactMessage::query()->with('assignee:id,name,email')
             ->when($filters['status'] ?? null, fn ($query, $value) => $query->where('status', $value))
             ->when($filters['assigned_to'] ?? null, fn ($query, $value) => $query->where('assigned_to', $value))
+            ->when($filters['form_type'] ?? null, fn ($query, $value) => $query->where('form_type', $value))
+            ->when($filters['guest_estimate'] ?? null, fn ($query, $value) => $query->where('guest_estimate', $value))
+            ->when($filters['event_from'] ?? null, fn ($query, $value) => $query->whereDate('event_date', '>=', $value))
+            ->when($filters['event_to'] ?? null, fn ($query, $value) => $query->whereDate('event_date', '<=', $value))
             ->when($filters['date_from'] ?? null, fn ($query, $value) => $query->whereDate('submitted_at', '>=', $value))
             ->when($filters['date_to'] ?? null, fn ($query, $value) => $query->whereDate('submitted_at', '<=', $value))
-            ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($nested) => $nested->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")->orWhere('subject', 'like', "%{$search}%")->orWhere('message', 'like', "%{$search}%")))
+            ->when($filters['search'] ?? null, fn ($query, $search) => $query->where(fn ($nested) => $nested->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%")->orWhere('subject', 'like', "%{$search}%")->orWhere('company', 'like', "%{$search}%")->orWhere('whatsapp', 'like', "%{$search}%")->orWhere('message', 'like', "%{$search}%")))
             ->latest('submitted_at')->paginate($perPage);
     }
 

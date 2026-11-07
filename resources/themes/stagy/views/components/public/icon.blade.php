@@ -36,6 +36,15 @@
         @case('check')
             <path d="M20 6 9 17l-5-5" />
             @break
+        @case('monitor')
+            <rect x="3" y="4" width="18" height="14" rx="2" /><path d="M8 21h8M12 18v3" />
+            @break
+        @case('link')
+            <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+            @break
+        @case('arrow-left')
+            <path d="M19 12H5M11 6l-6 6 6 6" />
+            @break
         @case('arrow-right')
             <path d="M5 12h14M13 6l6 6-6 6" />
             @break

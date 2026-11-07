@@ -22,6 +22,9 @@ use App\Http\Controllers\Api\V1\Admin\PortfolioController as AdminPortfolioContr
 use App\Http\Controllers\Api\V1\Admin\PortfolioSeoController;
 use App\Http\Controllers\Api\V1\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Api\V1\Admin\PostSeoController;
+use App\Http\Controllers\Api\V1\Admin\PricingAddonController;
+use App\Http\Controllers\Api\V1\Admin\PricingComparisonRowController;
+use App\Http\Controllers\Api\V1\Admin\PricingPlanController;
 use App\Http\Controllers\Api\V1\Admin\ProfileController;
 use App\Http\Controllers\Api\V1\Admin\RoleController;
 use App\Http\Controllers\Api\V1\Admin\ServiceController as AdminServiceController;
@@ -37,6 +40,7 @@ use App\Http\Controllers\Api\V1\Public\MenuController as PublicMenuController;
 use App\Http\Controllers\Api\V1\Public\PageController as PublicPageController;
 use App\Http\Controllers\Api\V1\Public\PortfolioController as PublicPortfolioController;
 use App\Http\Controllers\Api\V1\Public\PostController as PublicPostController;
+use App\Http\Controllers\Api\V1\Public\PricingController as PublicPricingController;
 use App\Http\Controllers\Api\V1\Public\ServiceController as PublicServiceController;
 use App\Http\Controllers\Api\V1\Public\TaxonomyController;
 use App\Http\Controllers\Api\V1\Public\WebsiteSettingController as PublicWebsiteSettingController;
@@ -61,6 +65,9 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/', [PublicPortfolioController::class, 'index'])->name('api.v1.public.portfolio.index');
         Route::get('{slug}', [PublicPortfolioController::class, 'show'])->name('api.v1.public.portfolio.show');
     });
+    Route::get('public/pricing', [PublicPricingController::class, 'show'])
+        ->middleware(['throttle:public-api', 'locale', 'feature:pricing'])
+        ->name('api.v1.public.pricing.show');
     Route::post('public/contact-messages', [PublicContactMessageController::class, 'store'])
         ->middleware(['throttle:contact-form', 'locale', 'feature:contact-messages'])
         ->name('api.v1.public.contact-messages.store');
@@ -131,6 +138,14 @@ Route::prefix('v1')->group(function (): void {
             Route::apiResource('contact-messages', AdminContactMessageController::class)
                 ->only(['index', 'show', 'update', 'destroy'])
                 ->middleware('feature:contact-messages');
+            Route::middleware('feature:pricing')->prefix('pricing')->name('pricing.')->group(function (): void {
+                Route::post('plans/{pricing_plan}/restore', [PricingPlanController::class, 'restore'])->withTrashed();
+                Route::apiResource('plans', PricingPlanController::class)->parameters(['plans' => 'pricing_plan']);
+                Route::post('comparison-rows/{pricing_comparison_row}/restore', [PricingComparisonRowController::class, 'restore'])->withTrashed();
+                Route::apiResource('comparison-rows', PricingComparisonRowController::class)->parameters(['comparison-rows' => 'pricing_comparison_row']);
+                Route::post('addons/{pricing_addon}/restore', [PricingAddonController::class, 'restore'])->withTrashed();
+                Route::apiResource('addons', PricingAddonController::class)->parameters(['addons' => 'pricing_addon']);
+            });
             Route::apiResource('categories', CategoryController::class);
             Route::apiResource('tags', TagController::class);
             Route::get('website-settings', [AdminWebsiteSettingController::class, 'index'])

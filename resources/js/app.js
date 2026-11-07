@@ -504,7 +504,11 @@ if (settingsManager) {
         const form = settingsManager.querySelector(`[data-setting-form="${group}"]`);
         if (!form) return;
         form.querySelectorAll('[data-setting-key]').forEach((input) => {
-            const value = values[input.dataset.settingKey];
+            let value = values[input.dataset.settingKey];
+            // Per-language settings are objects keyed by locale; a legacy plain string belongs to the default language.
+            if (input.dataset.settingLocale) {
+                value = value && typeof value === 'object' ? value[input.dataset.settingLocale] : (input.dataset.settingLocale === cmsLocales.default ? value : null);
+            }
             if (input.type === 'checkbox') input.checked = Boolean(value);
             else input.value = value ?? '';
             input.disabled = !canUpdateWebsite;
@@ -524,7 +528,12 @@ if (settingsManager) {
         const group = form.dataset.settingForm;
         const values = {};
         form.querySelectorAll('[data-setting-key]').forEach((input) => {
-            values[input.dataset.settingKey] = input.type === 'checkbox' ? input.checked : (input.value.trim() || null);
+            const value = input.type === 'checkbox' ? input.checked : (input.value.trim() || null);
+            if (input.dataset.settingLocale) {
+                values[input.dataset.settingKey] = { ...(values[input.dataset.settingKey] ?? {}), [input.dataset.settingLocale]: value };
+            } else {
+                values[input.dataset.settingKey] = value;
+            }
         });
         const button = form.querySelector('[data-setting-save]');
         button.disabled = true;
@@ -989,6 +998,8 @@ if (contactInbox) {
     const list = contactInbox.querySelector('[data-contact-list]');
     const search = contactInbox.querySelector('[data-contact-search]');
     const status = contactInbox.querySelector('[data-contact-status]');
+    const formType = contactInbox.querySelector('[data-contact-form-type]');
+    const guestEstimate = contactInbox.querySelector('[data-contact-guest-estimate]');
     const dateFrom = contactInbox.querySelector('[data-contact-from]');
     const dateTo = contactInbox.querySelector('[data-contact-to]');
     const summary = contactInbox.querySelector('[data-contact-summary]');
@@ -1030,10 +1041,46 @@ if (contactInbox) {
             contactInbox.querySelector('[data-contact-detail-date]').textContent = new Date(currentMessage.submitted_at).toLocaleString();
             contactInbox.querySelector('[data-contact-detail-subject]').textContent = currentMessage.subject || 'Website enquiry';
             contactInbox.querySelector('[data-contact-detail-sender]').textContent = currentMessage.name;
-            contactInbox.querySelector('[data-contact-detail-message]').textContent = currentMessage.message;
+            const messageBox = contactInbox.querySelector('[data-contact-detail-message]');
+            messageBox.textContent = currentMessage.message || '';
+            messageBox.classList.toggle('hidden', !currentMessage.message);
             const email = contactInbox.querySelector('[data-contact-detail-email]');
-            email.textContent = currentMessage.email;
-            email.href = `mailto:${currentMessage.email}`;
+            email.textContent = currentMessage.email || '';
+            email.href = currentMessage.email ? `mailto:${currentMessage.email}` : '';
+            email.classList.toggle('hidden', !currentMessage.email);
+            // Demo requests carry event details; list the ones that were filled in.
+            const demoDetails = contactInbox.querySelector('[data-contact-detail-demo]');
+            demoDetails.replaceChildren();
+            if (currentMessage.form_type === 'demo') {
+                const whatsappDigits = (currentMessage.whatsapp || '').replace(/\D+/g, '').replace(/^0/, '62');
+                [
+                    ['WhatsApp', currentMessage.whatsapp, whatsappDigits ? `https://wa.me/${whatsappDigits}` : null],
+                    ['Expected guests', currentMessage.guest_estimate_label],
+                    ['Event date', currentMessage.event_date ? new Date(`${currentMessage.event_date}T00:00:00`).toLocaleDateString() : null],
+                    ['Interested plan', currentMessage.interested_plan || 'Not sure yet'],
+                    ['Language', currentMessage.locale ? localeName(currentMessage.locale) : null],
+                    ['Consent given', currentMessage.consented_at ? new Date(currentMessage.consented_at).toLocaleString() : null],
+                ].filter(([, value]) => value).forEach(([label, value, href]) => {
+                    const term = document.createElement('dt');
+                    term.className = 'text-xs font-semibold text-cms-navy/50';
+                    term.textContent = label;
+                    const description = document.createElement('dd');
+                    description.className = 'text-cms-navy';
+                    if (href) {
+                        const link = document.createElement('a');
+                        link.href = href;
+                        link.target = '_blank';
+                        link.rel = 'noopener';
+                        link.className = 'font-semibold text-cms-green';
+                        link.textContent = value;
+                        description.append(link);
+                    } else {
+                        description.textContent = value;
+                    }
+                    demoDetails.append(term, description);
+                });
+            }
+            demoDetails.classList.toggle('hidden', currentMessage.form_type !== 'demo');
             const phone = contactInbox.querySelector('[data-contact-detail-phone]');
             phone.textContent = currentMessage.phone || '';
             phone.href = currentMessage.phone ? `tel:${currentMessage.phone}` : '';
@@ -1075,12 +1122,12 @@ if (contactInbox) {
             top.append(sender, time);
             const subject = document.createElement('span');
             subject.className = 'truncate text-xs font-semibold text-cms-navy/65';
-            subject.textContent = message.subject || 'Website enquiry';
+            subject.textContent = `${message.form_type === 'demo' ? 'Demo · ' : ''}${message.subject || 'Website enquiry'}`;
             const bottom = document.createElement('span');
             bottom.className = 'flex items-center justify-between gap-3';
             const preview = document.createElement('span');
             preview.className = 'truncate text-xs text-cms-navy/40';
-            preview.textContent = message.message;
+            preview.textContent = message.message || [message.guest_estimate_label, message.interested_plan].filter(Boolean).join(' · ');
             const badge = document.createElement('span');
             badge.className = message.status === 'new' ? 'shrink-0 rounded-full bg-cms-gold/20 px-2 py-0.5 text-[0.65rem] font-bold' : 'shrink-0 text-[0.65rem] font-bold text-cms-green';
             badge.textContent = contactStatusLabel(message.status);
@@ -1104,13 +1151,15 @@ if (contactInbox) {
         const params = new URLSearchParams({ page: currentPage, per_page: 15 });
         if (search.value.trim()) params.set('search', search.value.trim());
         if (status.value) params.set('status', status.value);
+        if (formType.value) params.set('form_type', formType.value);
+        if (guestEstimate.value) params.set('guest_estimate', guestEstimate.value);
         if (dateFrom.value) params.set('date_from', dateFrom.value);
         if (dateTo.value) params.set('date_to', dateTo.value);
         apiRequest(`/api/v1/admin/contact-messages?${params}`).then(renderMessages).catch(() => showContactNotice('Messages could not be loaded. Check your permission and the Contact Messages feature flag.'));
     };
 
     search.addEventListener('input', () => { clearTimeout(debounce); currentPage = 1; debounce = setTimeout(loadMessages, 250); });
-    [status, dateFrom, dateTo].forEach((input) => input.addEventListener('change', () => { currentPage = 1; loadMessages(); }));
+    [status, formType, guestEstimate, dateFrom, dateTo].forEach((input) => input.addEventListener('change', () => { currentPage = 1; loadMessages(); }));
     previous.addEventListener('click', () => { currentPage -= 1; loadMessages(); });
     next.addEventListener('click', () => { currentPage += 1; loadMessages(); });
 
@@ -1429,6 +1478,10 @@ if (pageEditor) {
     const postType = pageEditor.querySelector('[data-post-type]');
     const postCategories = pageEditor.querySelector('[data-post-categories]');
     const postTags = pageEditor.querySelector('[data-post-tags]');
+    const postFeatured = pageEditor.querySelector('[data-post-featured]');
+    const postCover = pageEditor.querySelector('[data-post-cover]');
+    const postCoverPreview = pageEditor.querySelector('[data-post-cover-preview]');
+    const postCoverCopy = pageEditor.querySelector('[data-post-cover-copy]');
     const serviceExcerpt = pageEditor.querySelector('[data-service-excerpt]');
     const serviceIcon = pageEditor.querySelector('[data-service-icon]');
     const servicePosition = pageEditor.querySelector('[data-service-position]');
@@ -1530,8 +1583,164 @@ if (pageEditor) {
         container.append(row);
     };
 
+    // Schema-driven block forms: blocks with `editor: 'schema'` are built from their field definitions.
+    const schemaInputClass = 'h-10 w-full rounded-xl border border-cms-navy/10 bg-white px-3 text-sm outline-none focus:border-cms-gold';
+    const schemaTextareaClass = 'min-h-24 w-full resize-y rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-cms-gold';
+    const wideSchemaTypes = ['text', 'list', 'repeater', 'action', 'media'];
+
+    const schemaCaption = (definition, key) => {
+        const caption = document.createElement('span');
+        caption.className = 'text-xs font-semibold text-cms-navy/60';
+        caption.textContent = `${definition.label ?? key.replaceAll('_', ' ')}${definition.required ? ' *' : ''}`;
+        return caption;
+    };
+
+    const schemaHelp = (definition) => {
+        if (!definition.help) return null;
+        const help = document.createElement('span');
+        help.className = 'text-[0.7rem] leading-4 text-cms-navy/40';
+        help.textContent = definition.help;
+        return help;
+    };
+
+    const schemaInput = (definition, value) => {
+        if (definition.type === 'text' || definition.type === 'list') {
+            const textarea = document.createElement('textarea');
+            textarea.className = schemaTextareaClass;
+            textarea.value = definition.type === 'list' ? (Array.isArray(value) ? value.join('\n') : '') : (value ?? '');
+            return textarea;
+        }
+        if (definition.type === 'select') {
+            const select = document.createElement('select');
+            select.className = schemaInputClass;
+            Object.entries(definition.options ?? {}).forEach(([optionValue, optionLabel]) => select.append(new Option(optionLabel, optionValue)));
+            select.value = value ?? definition.default ?? Object.keys(definition.options ?? {})[0] ?? '';
+            return select;
+        }
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = schemaInputClass;
+        input.value = value ?? '';
+        if (definition.type === 'link') input.placeholder = '/page, #anchor, https://… or whatsapp';
+        return input;
+    };
+
+    const renderRepeaterRow = (rows, definition, row = {}) => {
+        const item = document.createElement('div');
+        item.dataset.repeaterRow = '';
+        item.className = 'grid gap-3 rounded-xl border border-cms-navy/8 bg-cms-canvas/50 p-3 sm:grid-cols-2';
+        Object.entries(definition.fields ?? {}).forEach(([key, child]) => {
+            const label = document.createElement('label');
+            label.className = `grid gap-1.5${child.type === 'text' ? ' sm:col-span-2' : ''}`;
+            const input = schemaInput(child, row[key]);
+            input.dataset.rowKey = key;
+            label.append(schemaCaption(child, key), input);
+            item.append(label);
+        });
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-3 sm:col-span-2';
+        [['↑', () => item.previousElementSibling?.before(item)], ['↓', () => item.nextElementSibling?.after(item)], [`Remove ${(definition.item_label ?? 'item').toLowerCase()}`, () => item.remove()]].forEach(([text, onClick]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = text.startsWith('Remove') ? 'text-xs font-bold text-red-700' : 'text-xs font-bold text-cms-navy/45';
+            button.textContent = text;
+            button.addEventListener('click', onClick);
+            actions.append(button);
+        });
+        item.append(actions);
+        rows.append(item);
+    };
+
+    const schemaControl = (key, definition, value) => {
+        if (definition.type === 'media') {
+            const media = mediaField(`${definition.label ?? key}${definition.required ? ' *' : ''}`, value);
+            media.dataset.schemaField = key;
+            const help = schemaHelp(definition);
+            if (help) media.append(help);
+            return media;
+        }
+        const wrapper = document.createElement(['repeater', 'action', 'boolean'].includes(definition.type) ? 'div' : 'label');
+        wrapper.dataset.schemaField = key;
+        wrapper.className = `grid content-start gap-1.5${wideSchemaTypes.includes(definition.type) ? ' sm:col-span-2' : ''}`;
+        if (definition.type === 'boolean') {
+            const toggle = document.createElement('label');
+            toggle.className = 'flex items-center gap-2 text-sm font-semibold text-cms-navy';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = Boolean(value ?? definition.default);
+            checkbox.className = 'size-4 accent-cms-green';
+            toggle.append(checkbox, definition.label ?? key);
+            wrapper.append(toggle);
+        } else if (definition.type === 'action') {
+            const pair = document.createElement('div');
+            pair.className = 'grid gap-2 sm:grid-cols-2';
+            ['label', 'url'].forEach((part) => {
+                const input = schemaInput({ type: part === 'url' ? 'link' : 'string' }, value?.[part]);
+                input.dataset.actionPart = part;
+                input.setAttribute('aria-label', `${definition.label ?? key} ${part === 'url' ? 'link' : 'label'}`);
+                if (part === 'label') input.placeholder = 'Button label';
+                pair.append(input);
+            });
+            wrapper.append(schemaCaption(definition, key), pair);
+        } else if (definition.type === 'repeater') {
+            const rows = document.createElement('div');
+            rows.dataset.repeaterRows = '';
+            rows.className = 'grid gap-3';
+            (Array.isArray(value) && value.length ? value : [{}]).forEach((row) => renderRepeaterRow(rows, definition, row));
+            const add = document.createElement('button');
+            add.type = 'button';
+            add.className = 'justify-self-start rounded-lg border border-cms-green/20 px-3 py-2 text-xs font-bold text-cms-green';
+            add.textContent = `+ Add ${(definition.item_label ?? 'item').toLowerCase()}`;
+            add.addEventListener('click', () => renderRepeaterRow(rows, definition));
+            wrapper.append(schemaCaption(definition, key), rows, add);
+        } else {
+            wrapper.append(schemaCaption(definition, key), schemaInput(definition, value));
+        }
+        const help = schemaHelp(definition);
+        if (help) wrapper.append(help);
+        return wrapper;
+    };
+
+    const readSchemaValue = (wrapper, definition) => {
+        if (definition.type === 'media') return wrapper.querySelector('input[type="hidden"]').value.trim() || undefined;
+        if (definition.type === 'boolean') return wrapper.querySelector('input[type="checkbox"]').checked;
+        if (definition.type === 'action') {
+            const action = Object.fromEntries([...wrapper.querySelectorAll('[data-action-part]')].map((input) => [input.dataset.actionPart, input.value.trim()]));
+            return action.label || action.url ? action : undefined;
+        }
+        if (definition.type === 'repeater') {
+            return [...wrapper.querySelectorAll('[data-repeater-row]')].map((row) => {
+                const entry = {};
+                row.querySelectorAll('[data-row-key]').forEach((input) => { if (input.value.trim()) entry[input.dataset.rowKey] = input.value.trim(); });
+                return entry;
+            }).filter((entry) => Object.keys(entry).length);
+        }
+        const control = wrapper.querySelector('input, textarea, select');
+        if (definition.type === 'list') {
+            const lines = control.value.split('\n').map((line) => line.trim()).filter(Boolean);
+            return lines.length ? lines : undefined;
+        }
+        return control.value.trim() || undefined;
+    };
+
+    const serializeSchemaBlock = (block) => {
+        const body = block.querySelector('[data-block-body]');
+        const data = {};
+        Object.entries(blockDefinitions[block.dataset.blockType]?.fields ?? {}).forEach(([key, definition]) => {
+            const wrapper = body.querySelector(`:scope > [data-schema-field="${key}"]`);
+            if (!wrapper) return;
+            const value = readSchemaValue(wrapper, definition);
+            if (value !== undefined) data[key] = value;
+        });
+        return data;
+    };
+
     const blockFields = (block, type, data) => {
         const body = block.querySelector('[data-block-body]');
+        if (blockDefinitions[type]?.editor === 'schema') {
+            Object.entries(blockDefinitions[type].fields).forEach(([key, definition]) => body.append(schemaControl(key, definition, data[key])));
+            return;
+        }
         if (type === 'rich_text') body.append(field('Content', 'content', data.content, true));
         if (type === 'hero') body.append(
             field('Heading', 'heading', data.heading),
@@ -1608,6 +1817,13 @@ if (pageEditor) {
     };
 
     const serializeBlocks = () => [...blockList.querySelectorAll('[data-content-block]')].map((block) => {
+        if (blockDefinitions[block.dataset.blockType]?.editor === 'schema') {
+            return {
+                ...(block.dataset.blockId ? { id: block.dataset.blockId } : {}),
+                type: block.dataset.blockType,
+                data: serializeSchemaBlock(block),
+            };
+        }
         const data = {};
         block.querySelectorAll('[data-field]').forEach((input) => {
             const value = input.value.trim();
@@ -1715,6 +1931,16 @@ if (pageEditor) {
                 if (postType) postType.value = page.type;
                 if (postCategories) [...postCategories.options].forEach((option) => { option.selected = page.categories.some((category) => category.id === option.value); });
                 if (postTags) [...postTags.options].forEach((option) => { option.selected = page.tags.some((tag) => tag.id === option.value); });
+                if (postFeatured) postFeatured.checked = Boolean(page.is_featured);
+                if (postCover) postCover.value = page.cover_image?.id ?? '';
+                if (postCoverCopy) postCoverCopy.textContent = page.cover_image?.original_name ?? 'No media selected';
+                if (postCoverPreview && page.cover_image?.url) {
+                    const image = document.createElement('img');
+                    image.src = page.cover_image.url;
+                    image.alt = page.cover_image.alt_text || page.title;
+                    image.className = 'h-full w-full object-cover';
+                    postCoverPreview.replaceChildren(image);
+                }
                 if (serviceExcerpt) serviceExcerpt.value = page.excerpt ?? '';
                 if (serviceIcon) serviceIcon.value = page.icon ?? '';
                 if (servicePosition) servicePosition.value = page.position ?? 0;
@@ -1765,6 +1991,7 @@ if (pageEditor) {
     });
     slugInput.addEventListener('input', () => { slugWasEdited = true; });
     pageEditor.querySelector('[data-add-block]').addEventListener('click', () => addBlock(blockType.value));
+    pageEditor.querySelector('[data-post-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: postCover, preview: postCoverPreview, copy: postCoverCopy } })));
     pageEditor.querySelector('[data-portfolio-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: portfolioCover, preview: portfolioCoverPreview, copy: portfolioCoverCopy } })));
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -1787,6 +2014,8 @@ if (pageEditor) {
                 requestPayload.excerpt = postExcerpt.value.trim() || null;
                 requestPayload.category_ids = [...postCategories.selectedOptions].map((option) => option.value);
                 requestPayload.tag_ids = [...postTags.selectedOptions].map((option) => option.value);
+                requestPayload.is_featured = postFeatured.checked;
+                requestPayload.cover_image_id = postCover.value || null;
             }
             if (resource === 'services') {
                 requestPayload.excerpt = serviceExcerpt.value.trim() || null;
@@ -2596,4 +2825,264 @@ if (contactForm) {
             submitLabel.textContent = 'Send Message';
         }
     });
+}
+
+const pricingManager = document.querySelector('[data-pricing-manager]');
+
+if (pricingManager) {
+    const localeSelect = pricingManager.querySelector('[data-pricing-locale]');
+    const notice = pricingManager.querySelector('[data-pricing-notice]');
+    const permissions = {
+        create: pricingManager.dataset.canCreate === 'true',
+        update: pricingManager.dataset.canUpdate === 'true',
+        delete: pricingManager.dataset.canDelete === 'true',
+    };
+    let plans = [];
+
+    const showNotice = (message, type = 'error') => {
+        notice.textContent = message;
+        notice.className = type === 'success'
+            ? 'rounded-xl border border-cms-green/20 bg-cms-green/8 p-4 text-sm text-cms-green'
+            : 'rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800';
+    };
+
+    // A comparison cell is true (included), false (not included) or a short text.
+    const comparisonCell = (plan, value) => {
+        const wrapper = document.createElement('div');
+        wrapper.dataset.planCell = plan.id;
+        wrapper.className = 'grid gap-1.5';
+        const caption = document.createElement('span');
+        caption.className = 'text-xs font-semibold text-cms-navy/60';
+        caption.textContent = plan.name;
+        const mode = document.createElement('select');
+        mode.className = 'h-10 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm';
+        [['yes', '✓ Included'], ['no', '– Not included'], ['text', 'Text…']].forEach(([optionValue, label]) => mode.append(new Option(label, optionValue)));
+        const text = document.createElement('input');
+        text.type = 'text';
+        text.maxLength = 60;
+        text.placeholder = 'e.g. 2, 200 tamu, Add-on';
+        text.className = 'h-10 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm';
+        mode.value = value === true ? 'yes' : (typeof value === 'string' && value !== '' ? 'text' : 'no');
+        text.value = typeof value === 'string' ? value : '';
+        text.classList.toggle('hidden', mode.value !== 'text');
+        mode.addEventListener('change', () => text.classList.toggle('hidden', mode.value !== 'text'));
+        wrapper.append(caption, mode, text);
+        return wrapper;
+    };
+
+    const collections = {
+        plans: {
+            fields: [
+                { key: 'name', label: 'Name', required: true },
+                { key: 'tagline', label: 'Tagline', placeholder: '200 tamu termasuk · scan QR' },
+                { key: 'price', label: 'Starting price (Rp)', type: 'number', required: true },
+                { key: 'extra_guest_price', label: 'Price per extra guest (Rp)', type: 'number' },
+                { key: 'features', label: 'Features (one per line)', type: 'lines', wide: true },
+                { key: 'support_summary', label: 'On-site support summary', placeholder: 'Tim on-site · 2 QR scanner' },
+                { key: 'is_highlighted', label: 'Highlight this plan', type: 'checkbox' },
+                { key: 'highlight_label', label: 'Highlight badge', placeholder: 'Paling Populer' },
+                { key: 'cta_label', label: 'Button label', placeholder: 'Pilih Basic' },
+                { key: 'cta_url', label: 'Button link (empty = demo page)', placeholder: '/demo' },
+                { key: 'position', label: 'Order', type: 'number' },
+            ],
+            summary: (plan) => [plan.name, `${plan.price_formatted}${plan.is_highlighted ? ' · highlighted' : ''}`, plan.tagline],
+        },
+        'comparison-rows': {
+            fields: [
+                { key: 'group_name', label: 'Group', required: true, placeholder: 'Check-in di venue' },
+                { key: 'label', label: 'Feature', required: true },
+                { key: 'position', label: 'Order', type: 'number' },
+                { key: 'values', type: 'plan-values', wide: true },
+            ],
+            summary: (row) => [row.label, row.group_name, plans.map((plan) => {
+                const value = row.values?.[plan.id];
+                return `${plan.name}: ${value === true ? '✓' : (typeof value === 'string' && value ? value : '–')}`;
+            }).join(' · ')],
+        },
+        addons: {
+            fields: [
+                { key: 'name', label: 'Name', required: true, wide: true },
+                { key: 'price', label: 'Price (Rp)', type: 'number', required: true },
+                { key: 'unit', label: 'Unit', placeholder: '/ tamu' },
+                { key: 'position', label: 'Order', type: 'number' },
+            ],
+            summary: (addon) => [addon.name, `${addon.price_formatted} ${addon.unit ?? ''}`.trim()],
+        },
+    };
+
+    const renderForm = (section, name, entry = null) => {
+        const form = section.querySelector('[data-pricing-form]');
+        const config = collections[name];
+        const editable = entry ? permissions.update : permissions.create;
+        form.replaceChildren();
+        form.dataset.entryId = entry?.id ?? '';
+        config.fields.forEach((definition) => {
+            if (definition.type === 'plan-values') {
+                const cells = document.createElement('div');
+                cells.dataset.planValues = '';
+                cells.className = 'grid gap-3 sm:col-span-2 sm:grid-cols-3';
+                if (!plans.length) cells.textContent = 'Add plans first; each plan gets a column here.';
+                plans.forEach((plan) => cells.append(comparisonCell(plan, entry?.values?.[plan.id])));
+                form.append(cells);
+                return;
+            }
+            const label = document.createElement('label');
+            label.className = `grid gap-1.5${definition.wide ? ' sm:col-span-2' : ''}${definition.type === 'checkbox' ? ' content-end' : ''}`;
+            const caption = document.createElement('span');
+            caption.className = 'text-xs font-semibold text-cms-navy/60';
+            caption.textContent = `${definition.label}${definition.required ? ' *' : ''}`;
+            const value = entry?.[definition.key];
+            let input;
+            if (definition.type === 'lines') {
+                input = document.createElement('textarea');
+                input.className = 'min-h-28 rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-sm';
+                input.value = Array.isArray(value) ? value.join('\n') : '';
+            } else {
+                input = document.createElement('input');
+                input.type = definition.type === 'checkbox' ? 'checkbox' : (definition.type === 'number' ? 'number' : 'text');
+                if (definition.type === 'number') input.min = '0';
+                if (definition.type === 'checkbox') input.checked = Boolean(value);
+                else input.value = value ?? (definition.key === 'position' ? '0' : '');
+                input.className = definition.type === 'checkbox' ? 'size-4 accent-cms-green' : 'h-10 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm';
+            }
+            input.dataset.key = definition.key;
+            input.dataset.type = definition.type ?? 'text';
+            if (definition.placeholder) input.placeholder = definition.placeholder;
+            input.disabled = !editable;
+            if (definition.type === 'checkbox') {
+                label.className += ' flex items-center gap-2';
+                label.append(input, caption);
+            } else {
+                label.append(caption, input);
+            }
+            form.append(label);
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'flex flex-wrap gap-2 sm:col-span-2';
+        if (editable) {
+            const save = document.createElement('button');
+            save.type = 'submit';
+            save.className = 'h-10 rounded-xl bg-cms-green px-4 text-sm font-bold text-white';
+            save.textContent = entry ? 'Save changes' : `Create ${section.dataset.singular}`;
+            actions.append(save);
+        }
+        if (entry && permissions.delete) {
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'h-10 rounded-xl border border-red-200 bg-white px-4 text-sm font-bold text-red-700';
+            remove.textContent = 'Delete';
+            remove.addEventListener('click', async () => {
+                if (!window.confirm(`Delete this ${section.dataset.singular}? It can be restored through the API.`)) return;
+                try {
+                    await apiRequest(`/api/v1/admin/pricing/${name}/${entry.id}`, { method: 'DELETE' });
+                    showNotice(`The ${section.dataset.singular} was deleted.`, 'success');
+                    await loadAll();
+                } catch { showNotice(`The ${section.dataset.singular} could not be deleted.`); }
+            });
+            actions.append(remove);
+        }
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'h-10 rounded-xl border border-cms-navy/10 bg-white px-4 text-sm font-bold text-cms-navy';
+        cancel.textContent = 'Close';
+        cancel.addEventListener('click', () => form.classList.add('hidden'));
+        actions.append(cancel);
+        form.append(actions);
+        form.classList.remove('hidden');
+        form.querySelector('input:not([type="checkbox"]), textarea')?.focus();
+    };
+
+    const readForm = (form, name) => {
+        const payload = {};
+        form.querySelectorAll('[data-key]').forEach((input) => {
+            const key = input.dataset.key;
+            if (input.dataset.type === 'checkbox') payload[key] = input.checked;
+            else if (input.dataset.type === 'number') payload[key] = input.value === '' ? null : Number(input.value);
+            else if (input.dataset.type === 'lines') payload[key] = input.value.split('\n').map((line) => line.trim()).filter(Boolean);
+            else payload[key] = input.value.trim() || null;
+        });
+        if (name === 'comparison-rows') {
+            payload.values = Object.fromEntries([...form.querySelectorAll('[data-plan-cell]')].map((cell) => {
+                const mode = cell.querySelector('select').value;
+                const text = cell.querySelector('input').value.trim();
+                return [cell.dataset.planCell, mode === 'yes' ? true : (mode === 'text' && text ? text : false)];
+            }));
+        }
+        if (payload.position === null) payload.position = 0;
+        return payload;
+    };
+
+    const renderList = (section, name, entries) => {
+        const list = section.querySelector('[data-pricing-list]');
+        list.replaceChildren();
+        entries.forEach((entry) => {
+            const [title, meta, detail] = collections[name].summary(entry);
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'grid gap-0.5 rounded-xl border border-cms-navy/8 bg-white px-4 py-3 text-left hover:border-cms-gold';
+            [[title, 'text-sm font-bold text-cms-navy'], [meta, 'text-xs text-cms-navy/55'], [detail, 'truncate text-xs text-cms-navy/40']].forEach(([text, className]) => {
+                if (!text) return;
+                const line = document.createElement('span');
+                line.className = className;
+                line.textContent = text;
+                row.append(line);
+            });
+            row.addEventListener('click', () => renderForm(section, name, entry));
+            list.append(row);
+        });
+        if (!entries.length) {
+            const empty = document.createElement('p');
+            empty.className = 'p-2 text-sm text-cms-navy/45';
+            empty.textContent = `No ${section.dataset.singular}s in ${localeName(localeSelect.value)} yet.`;
+            list.append(empty);
+        }
+    };
+
+    async function loadAll() {
+        const locale = encodeURIComponent(localeSelect.value);
+        try {
+            const [planPayload, rowPayload, addonPayload] = await Promise.all(
+                ['plans', 'comparison-rows', 'addons'].map((name) => apiRequest(`/api/v1/admin/pricing/${name}?locale=${locale}`)),
+            );
+            plans = planPayload.data;
+            const payloads = { plans: planPayload, 'comparison-rows': rowPayload, addons: addonPayload };
+            pricingManager.querySelectorAll('[data-pricing-collection]').forEach((section) => {
+                const name = section.dataset.pricingCollection;
+                section.querySelector('[data-pricing-form]').classList.add('hidden');
+                renderList(section, name, payloads[name].data);
+            });
+        } catch {
+            showNotice('Pricing could not be loaded. Check your permission and the Pricing feature flag.');
+        }
+    }
+
+    pricingManager.querySelectorAll('[data-pricing-collection]').forEach((section) => {
+        const name = section.dataset.pricingCollection;
+        const newButton = section.querySelector('[data-pricing-new]');
+        newButton.classList.toggle('hidden', !permissions.create);
+        newButton.addEventListener('click', () => renderForm(section, name));
+        section.querySelector('[data-pricing-form]').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const id = form.dataset.entryId;
+            const payload = readForm(form, name);
+            if (!id) payload.locale = localeSelect.value;
+            try {
+                await apiRequest(id ? `/api/v1/admin/pricing/${name}/${id}` : `/api/v1/admin/pricing/${name}`, {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload),
+                });
+                showNotice(`The ${section.dataset.singular} was saved.`, 'success');
+                await loadAll();
+            } catch (error) {
+                const messages = Object.values(error.payload?.errors ?? {}).flat();
+                showNotice(messages.length ? messages.join(' ') : `The ${section.dataset.singular} could not be saved.`);
+            }
+        });
+    });
+
+    localeSelect.value = cmsLocales.default;
+    localeSelect.addEventListener('change', () => { notice.classList.add('hidden'); loadAll(); });
+    loadAll();
 }

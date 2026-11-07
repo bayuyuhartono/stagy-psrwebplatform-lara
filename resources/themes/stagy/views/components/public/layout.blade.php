@@ -19,10 +19,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title }}</title>
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-32.png') }}">
-        <link rel="icon" type="image/png" sizes="16x16" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-16.png') }}">
-        <link rel="icon" type="image/png" sizes="512x512" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-512.png') }}">
-        <link rel="apple-touch-icon" sizes="180x180" href="{{ Vite::asset('resources/themes/stagy/assets/images/apple-touch-icon.png') }}">
+        @if (filled($brandFaviconUrl ?? null))
+            <link rel="icon" href="{{ $brandFaviconUrl }}">
+            <link rel="apple-touch-icon" href="{{ $brandFaviconUrl }}">
+        @else
+            <link rel="icon" type="image/png" sizes="32x32" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-32.png') }}">
+            <link rel="icon" type="image/png" sizes="16x16" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-16.png') }}">
+            <link rel="icon" type="image/png" sizes="512x512" href="{{ Vite::asset('resources/themes/stagy/assets/images/favicon-512.png') }}">
+            <link rel="apple-touch-icon" sizes="180x180" href="{{ Vite::asset('resources/themes/stagy/assets/images/apple-touch-icon.png') }}">
+        @endif
         <meta name="theme-color" content="#1E2956">
         @include('public.partials.seo-head')
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/themes/stagy/stagy.css', 'resources/themes/stagy/stagy.js'])
@@ -35,11 +40,12 @@
             <div class="bg-public-accent px-4 py-2.5 text-center text-xs tracking-[0.04em] text-white">{{ $experience['announcement'] }}</div>
         @endif
 
-        @include('public.partials.header', ['siteName' => $siteName])
+        @php($logoUrl = $brandLogoUrl ?? Vite::asset('resources/themes/stagy/assets/images/logo.png'))
+        @include('public.partials.header', ['siteName' => $siteName, 'logoUrl' => $logoUrl])
 
         <main id="content">{{ $slot }}</main>
 
-        @include('public.partials.footer', ['siteName' => $siteName])
+        @include('public.partials.footer', ['siteName' => $siteName, 'logoUrl' => $logoUrl])
 
         @if (($theme['show_whatsapp_button'] ?? true) && filled($whatsappUrl ?? null))
             <a href="{{ $whatsappUrl }}" target="_blank" rel="noopener" aria-label="{{ __('theme::site.chat_whatsapp') }}" class="fixed right-5 bottom-5 z-30 grid size-14 place-items-center rounded-full bg-public-accent text-white shadow-[0_10px_24px_rgba(30,41,86,0.28)] transition hover:bg-public-deep focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-public-ink">

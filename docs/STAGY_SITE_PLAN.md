@@ -6,18 +6,18 @@ Implementasi landing site **Stagy** (sistem registrasi & check-in event untuk EO
 - **Dimulai:** 2026-11-07
 - **Legend:** `[x]` selesai · `[~]` sebagian · `[ ]` belum · ⏸ menunggu keputusan
 
-**Fase aktif:** Fase 2 selesai — menunggu review sebelum Fase 3 (branch `feat/stagy-site`)
+**Fase aktif:** Semua fase selesai — tinggal review visual di browser (branch `feat/stagy-site`)
 
 | Fase | Judul | Status | Commit |
 | --- | --- | --- | --- |
 | 1 | Fondasi i18n | `[x]` | `925485b` |
 | 2 | Theme `stagy` | `[x]` | _user_ |
-| 3 | Block type baru | `[ ]` | — |
-| 4 | Modul Pricing | `[ ]` | — |
-| 5 | Form Minta Demo | `[ ]` | — |
-| 6 | Blog | `[ ]` | — |
-| 7 | Website Settings | `[ ]` | — |
-| 8 | Seeder konten mockup | `[ ]` | — |
+| 3 | Block type baru | `[x]` | _user_ |
+| 4 | Modul Pricing | `[x]` | _user_ |
+| 5 | Form Minta Demo | `[x]` | _user_ |
+| 6 | Blog | `[x]` | _user_ |
+| 7 | Website Settings | `[x]` | _user_ |
+| 8 | Seeder konten mockup | `[x]` | _user_ |
 
 ---
 
@@ -104,67 +104,116 @@ Implementasi landing site **Stagy** (sistem registrasi & check-in event untuk EO
 
 ## Fase 3 — Block type baru
 
-Didaftarkan di `config/content_blocks.php` (field + rules), di-render oleh theme `stagy`, bisa diedit di block editor CMS.
+Didaftarkan di `config/content_blocks.php` (field + rules), di-render oleh theme `stagy` (`views/public/blocks/*`), bisa diedit di block editor CMS.
 
-- [ ] `hero` diperluas: badge, CTA kedua, trust points, visual e-ticket
-- [ ] `feature_cards` — kartu bernomor dengan link
-- [ ] `steps` — langkah bernomor, opsional kolom "Anda / Stagy"
-- [ ] `feature_group` — label tahap, judul, deskripsi, checklist, screenshot (layout zig-zag) + navigasi chip anchor
-- [ ] `support_tiers` — pendampingan hari-H per paket (data dari Pricing)
-- [ ] `faq` — accordion (item terbuka pertama)
-- [ ] `legal_sections` — bagian bernomor + daftar isi otomatis, tanggal pembaruan
-- [ ] `call_to_action` diperluas: CTA kedua (WhatsApp)
-- [ ] `pricing_cards`, `pricing_table`, `pricing_addons` — referensi ke modul Pricing (Fase 4)
-- [ ] `demo_form` — form Minta Demo (Fase 5)
-- [ ] Test: validasi tiap block, render tiap block
+- [x] Form CMS dibangkitkan dari skema untuk block bertanda `'editor' => 'schema'` (string, text, link, media, select, boolean, action, list, repeater)
+- [x] Aturan validasi `content_link`: URL http(s), path `/…`, `#anchor`, `mailto:`/`tel:`, dan kata kunci `whatsapp` → nomor WA dari settings (tombol disembunyikan bila kosong)
+- [x] Penanda highlight di judul: `*kata*` → hijau (di-escape lebih dulu)
+- [x] `hero` diperluas: badge, tombol kedua, trust points, visual e-ticket (teks tiket bisa diedit) / gambar / tanpa visual
+- [x] `page_header` — eyebrow, judul, intro, chip lompat ke `#anchor`
+- [x] `feature_cards` — kartu bernomor otomatis dengan link + link "lihat semua"
+- [x] `steps` — layout ringkas (baris) atau detail (kolom "Anda / Stagy", kartu terakhir navy)
+- [x] `feature_group` — label tahap, checklist, screenshot/placeholder; selang-seling kiri/kanan & latar otomatis
+- [x] `faq` — accordion `<details>` (item pertama terbuka), tombol WhatsApp opsional
+- [x] `legal_sections` — bagian bernomor + daftar isi otomatis, tanggal pembaruan, catatan penutup
+- [x] `call_to_action` diperluas: tombol kedua
+- [x] Versi Stagy untuk block lama: `rich_text`, `image`, `feature_grid`
+- [x] Test: 23 test di `tests/Feature/StagyBlocksTest.php`
+
+**Dipindah dari Fase 3:**
+- `support_tiers`, `pricing_cards`, `pricing_table`, `pricing_addons` → Fase 4 (datanya dari modul Pricing)
+- `demo_form` → Fase 5
+
+**Catatan:**
+- Block baru hanya punya tampilan di theme `stagy`; di theme `default` block tersebut tidak dirender.
+- Form CMS yang dibangkitkan dari skema belum dicoba di browser (build JS lolos).
 
 ## Fase 4 — Modul Pricing
 
-- [ ] Model + migrasi: paket (nama, tagline, harga mulai, harga per tamu tambahan, tamu termasuk, cara check-in, daftar fitur, highlight, label CTA, posisi), grup & baris perbandingan, add-on (nama, harga, satuan) — per locale
-- [ ] Layering lengkap + Policy + permission + feature flag `pricing` + audit log + soft delete
-- [ ] Admin API + UI CMS
-- [ ] Public API
-- [ ] Derivasi "termasuk di semua paket" dari baris perbandingan yang nilainya sama
-- [ ] Test: CRUD, otorisasi, public API, derivasi
+- [x] Model + migrasi per locale (`HasTranslations`, soft delete):
+  - `pricing_plans`: nama, tagline, harga mulai, harga per tamu tambahan, daftar fitur, ringkasan pendampingan hari-H, highlight + label, tombol (label + link), urutan
+  - `pricing_comparison_rows`: grup, label, nilai per paket (`true` ✓ / `false` – / teks pendek), urutan
+  - `pricing_addons`: nama, harga, satuan, urutan
+- [x] Layering: `PricingRepository`, `PricingService` (satu service untuk ketiganya), 4 Action, Policy (`pricing.*`), audit log (`pricing-plan.created`, dst.)
+- [x] Feature flag `pricing`; permission `pricing.view/create/update/delete/restore` (Editor: penuh, Sales/Support: lihat)
+- [x] Admin API `api/v1/admin/pricing/{plans,comparison-rows,addons}` (+ restore), daftar per bahasa
+- [x] Public API `api/v1/public/pricing?locale=` → paket, tabel perbandingan, "termasuk di semua paket", add-on
+- [x] `PricingCatalog`: baris yang nilainya sama untuk semua paket dipindah ke "termasuk di semua paket"; baris yang tidak dimiliki paket mana pun dibuang
+- [x] `PriceFormatter`: `Rp4 juta`, `Rp8,1 juta`, `Rp2.500` / `IDR 8.1 million`
+- [x] Block `pricing_cards` (lengkap / ringkas), `pricing_table`, `pricing_addons`, `support_tiers` (dipindah dari Fase 3)
+- [x] CMS: menu **Pricing** — pilih bahasa, kelola Paket, Tabel perbandingan (✓ / – / teks per paket), Add-on
+- [x] Test: 17 test di `tests/Feature/PricingTest.php`
+
+**Catatan:**
+- Nilai perbandingan disimpan per id paket. Menghapus paket membuat nilainya diabaikan (bukan error).
+- Baris yang sama di semua paket dengan nilai teks tampil sebagai "Label: nilai" (mis. "Undangan WhatsApp: 200 tamu"). Baris "Tim on-site tambahan: Add-on" dari mockup sebaiknya tidak di-seed karena sudah ada di tabel add-on.
+- Halaman CMS Pricing belum dicoba di browser (build JS lolos).
 
 ## Fase 5 — Form Minta Demo
 
-- [ ] Migrasi `contact_messages`: `whatsapp`, `guest_estimate`, `event_date`, `interested_plan`, `consented_at`, `form_type`, `locale`
-- [ ] Form Request + Action menerima form demo; `subject` otomatis untuk `form_type = demo`
-- [ ] CMS: tampilkan & filter field baru
-- [ ] Email notifikasi menyertakan field baru
-- [ ] Test: submit valid/invalid, persetujuan wajib, rate limit
+- [x] Block `demo_form` (dipindah dari Fase 3): judul, intro, langkah "setelah form dikirim", ajakan chat WhatsApp, pesan sukses, link kebijakan privasi; pilihan paket diambil dari modul Pricing sesuai bahasa
+- [x] Migrasi `contact_messages`: `form_type`, `locale`, `whatsapp`, `guest_estimate`, `event_date`, `interested_plan`, `consented_at`; `email` & `message` jadi opsional (diuji di MySQL, termasuk rollback)
+- [x] Endpoint kontak yang sama dengan `form_type=demo`: WA + jumlah tamu + persetujuan wajib, email opsional, tanggal tidak boleh lewat; subjek otomatis "Permintaan demo — {EO/nama}"; bahasa pengirim tersimpan
+- [x] Form kontak biasa tetap dengan aturan lamanya
+- [x] Script form di theme (`stagy.js`): validasi di browser, pesan error per field dalam bahasa aktif, reCAPTCHA bila diaktifkan
+- [x] CMS inbox: filter "Demo requests" & jumlah tamu, pencarian nama EO/WA, detail demo (WA bisa diklik, jumlah tamu, tanggal, paket, bahasa, waktu persetujuan)
+- [x] Email notifikasi menampilkan detail demo; auto-reply dilewati bila tidak ada email
+- [x] Test: 12 test di `tests/Feature/DemoRequestTest.php`
+
+**Catatan:**
+- **Bug yang ditemukan & diperbaiki:** email notifikasi selalu memasang reply-to ke email pengunjung, sehingga crash bila email kosong.
+- Form demo & inbox CMS belum dicoba di browser (build JS lolos).
 
 ## Fase 6 — Blog
 
-- [ ] Flag artikel unggulan (`is_featured`), fallback ke artikel terbaru
-- [ ] Waktu baca dihitung dari isi blocks
-- [ ] Filter kategori + pagination di halaman daftar
-- [ ] Detail: breadcrumb, author, tanggal, waktu baca, cover, share (WA, LinkedIn, salin link), artikel terkait
-- [ ] Test: featured, waktu baca, filter, related
+- [x] Migrasi `posts`: `cover_image_id` (media) + `is_featured` (diuji di MySQL, termasuk rollback)
+- [x] Artikel unggulan: yang terbaru bertanda unggulan, fallback ke artikel terbaru; hanya di halaman 1 tanpa filter
+- [x] Waktu baca dihitung dari excerpt + teks block (200 kata/menit, minimal 1 menit); juga di API (`reading_time_minutes`)
+- [x] Halaman daftar: tab kategori (hanya kategori bahasa aktif yang punya artikel; link ke arsip `/blog/category/{slug}`), grid kartu, pagination bernomor
+- [x] Judul & penutup halaman blog diedit dari CMS: halaman ber-slug `blog` (block pertama = judul, sisanya di bawah daftar, SEO-nya dipakai); fallback teks bawaan theme
+- [x] Detail: breadcrumb, penulis, tanggal (format bahasa aktif), waktu baca, cover 16:9 (atau placeholder berwarna per kategori), share WA / LinkedIn / salin link, artikel terkait (sekategori dulu, lalu terbaru)
+- [x] Block `rich_text` di theme Stagy dirender sebagai Markdown aman (`##`, daftar, tebal, link; HTML mentah dibuang)
+- [x] CMS editor post: centang "Featured article" + pemilih cover
+- [x] Test: 9 test di `tests/Feature/StagyBlogTest.php`
+
+**Catatan:**
+- Halaman News memakai tampilan yang sama (route `/news` tetap ada, tidak ditautkan di theme).
+- Tampilan blog & editor CMS belum dicoba di browser.
 
 ## Fase 7 — Website Settings
 
-- [ ] Kontak: WhatsApp, email, alamat, jam kerja (teks per locale)
-- [ ] Sosial: Instagram, LinkedIn, TikTok, YouTube
-- [ ] Branding: logo, favicon, OG image default
-- [ ] Footer: tagline, tautan "Powered by" (per locale)
-- [ ] Teks settings per locale (dipindah dari Fase 1)
-- [ ] Test: settings tampil di theme
+- [x] Teks per bahasa (dipindah dari Fase 1): `general.tagline`, `contact.business_hours`, `seo.default_title`, `seo.default_description`, `experience.announcement` disimpan sebagai `{"id": …, "en": …}`; string lama tetap diterima dan berlaku untuk semua bahasa
+- [x] `PublicWebsiteSettings`: semua pembaca settings publik (controller, 404, public API) memakai nilai bahasa aktif → fallback bahasa default → bahasa mana pun yang terisi
+- [x] Kontak: nomor WhatsApp (dipakai semua tombol/link WA, fallback ke nomor telepon), jam operasional per bahasa
+- [x] Sosial: TikTok ditambahkan (Instagram, LinkedIn, YouTube sudah ada)
+- [x] Branding: logo & favicon dari CMS dipakai theme Stagy, fallback ke aset bawaan; OG image default memakai `seo.social_image_id` yang sudah ada
+- [x] CMS Settings: satu input per bahasa untuk teks per bahasa, field WhatsApp & TikTok
+- [x] Test: 9 test di `tests/Feature/LocalizedWebsiteSettingsTest.php`
+
+**Catatan:**
+- Tagline footer = `general.tagline`; "Powered by" diatur di pengaturan theme (nama & link), tidak per bahasa.
+- Form Settings belum dicoba di browser.
 
 ## Fase 8 — Seeder konten mockup
 
-- [ ] Halaman ID: Beranda, Fitur, Cara Kerja, Harga, FAQ, Minta Demo, Syarat & Ketentuan, Kebijakan Privasi (placeholder)
-- [ ] Menu header & footer (Produk, Bantuan)
-- [ ] Data Pricing: 3 paket, 6 grup perbandingan, 11 add-on
-- [ ] FAQ 8 item, kategori blog (Panduan, Tips EO, Teknologi, Laporan) + 7 artikel contoh
-- [ ] Settings kontak/sosial dengan placeholder dari mockup
-- [ ] Feature flag: Services, Portfolio, Contact dimatikan (dipindah dari Fase 2)
-- [ ] Seeder idempotent (aman dijalankan ulang)
+- [x] `StagySiteSeeder` dipanggil `DatabaseSeeder` saat theme aktif `stagy` (seeder konten company profile lama tetap untuk theme `default`)
+- [x] Halaman ID: Beranda (`home`), Fitur, Cara Kerja, Harga, FAQ, Minta Demo (`demo`), Syarat & Ketentuan, Kebijakan Privasi (placeholder), `blog` (judul + CTA penutup)
+- [x] Menu `header`, `footer-product`, `footer-help`
+- [x] Pricing: 3 paket, 21 baris perbandingan (tanpa "Tim on-site tambahan: Add-on"), 11 add-on
+- [x] FAQ 8 item, 4 kategori blog + 7 artikel (artikel "buku tamu digital" lengkap dalam Markdown & ditandai unggulan; lainnya excerpt + placeholder)
+- [x] Settings: nama situs, tagline ID/EN, alamat & jam operasional (placeholder), judul/deskripsi SEO default ID/EN
+- [x] Feature flag: Services & Portfolio mati untuk Stagy; `contact-messages` tetap hidup (dipakai form demo)
+- [x] Idempotent: data yang sudah ada tidak ditimpa, settings hanya mengisi yang kosong (diuji 2× di MySQL)
+- [x] Test: 16 test di `tests/Feature/StagySeederTest.php` (termasuk validasi skema semua block yang di-seed & render semua halaman)
 
----
+**Catatan:**
+- **Bug lama diperbaiki:** seeder berjalan tanpa model event, sehingga `locale`/`translation_group_id` tidak terisi. Ditambah `HasTranslations::translationDefaults()`; seeder lama (`PageSeeder`, `MenuSeeder`, `DemoContentSeeder`) ikut diperbaiki.
+- Nomor WhatsApp & email sengaja dikosongkan (mockup hanya berisi placeholder). Tombol WA tersembunyi sampai nomor diisi di CMS.
+- Halaman `/contact` bawaan tetap ada (tidak ditautkan); flag-nya sama dengan API kontak.
 
 ## Catatan & pertanyaan terbuka
 
-- Konten bertanda `[Konfirmasi: …]` / `[Jawaban dari tim: …]` di mockup ikut di-seed apa adanya agar terlihat di CMS sebagai yang perlu diisi.
-- Konten versi EN tidak di-seed; dibuat dari CMS lewat fitur "buat terjemahan".
+- Konten bertanda `[Konfirmasi: …]` / `[Jawaban dari tim: …]` / `[Isi dari tim legal: …]` di-seed apa adanya agar mudah ditemukan di CMS.
+- Konten versi EN tidak di-seed; dibuat dari CMS lewat "Add translation" (halaman, post, menu, kategori) dan pilihan bahasa di Pricing.
+- **Belum dilakukan:** review visual di browser (desktop & HP) untuk seluruh halaman dan UI CMS baru.
+- **Perlu diisi tim:** nomor WhatsApp, email, alamat, jam operasional, akun sosial, screenshot produk (block Fitur), cover artikel, isi legal, jawaban FAQ, konfirmasi PPN/durasi paket.

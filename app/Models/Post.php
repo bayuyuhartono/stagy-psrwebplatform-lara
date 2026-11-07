@@ -16,17 +16,22 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['author_id', 'title', 'slug', 'type', 'status', 'excerpt', 'blocks', 'published_at'])]
+#[Fillable(['author_id', 'cover_image_id', 'title', 'slug', 'type', 'status', 'excerpt', 'blocks', 'is_featured', 'published_at'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
     use HasFactory, HasTranslations, HasUuids, SoftDeletes;
 
-    protected $attributes = ['status' => 'draft', 'blocks' => '[]'];
+    protected $attributes = ['status' => 'draft', 'blocks' => '[]', 'is_featured' => false];
 
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function coverImage(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'cover_image_id');
     }
 
     public function categories(): BelongsToMany
@@ -51,6 +56,6 @@ class Post extends Model
 
     protected function casts(): array
     {
-        return ['type' => PostType::class, 'status' => PostStatus::class, 'blocks' => 'array', 'published_at' => 'datetime'];
+        return ['type' => PostType::class, 'status' => PostStatus::class, 'blocks' => 'array', 'is_featured' => 'boolean', 'published_at' => 'datetime'];
     }
 }

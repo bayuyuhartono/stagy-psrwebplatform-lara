@@ -9,13 +9,12 @@
         return ['label' => $item->label, 'href' => $href, 'target' => $item->target->value, 'active' => $path === $currentPath];
     });
     $demoUrl = localized_route('website.pages.show', $theme['demo_page_slug'] ?? 'demo');
-    $logoUrl = Vite::asset('resources/themes/stagy/assets/images/logo.png');
 @endphp
 
 <header class="sticky top-0 z-40 border-b border-public-line bg-public-paper/95 backdrop-blur supports-[backdrop-filter]:bg-public-paper/90">
     <nav aria-label="{{ __('theme::site.main_navigation') }}" class="mx-auto flex max-w-290 items-center gap-3 px-4 py-2.5 sm:px-6 lg:gap-9 lg:py-3">
         <a href="{{ localized_route('home') }}" aria-label="{{ __('theme::site.go_home', ['name' => $siteName]) }}" class="mr-auto flex shrink-0 items-center lg:mr-0">
-            <img src="{{ $logoUrl }}" alt="{{ $siteName }}" width="900" height="392" class="h-9 w-auto lg:h-10">
+            <img src="{{ $logoUrl }}" alt="{{ $siteName }}" @if (blank($brandLogoUrl ?? null)) width="900" height="392" @endif class="h-9 w-auto lg:h-10">
         </a>
 
         <div class="hidden flex-1 justify-center gap-7 lg:flex">

@@ -43,8 +43,8 @@ class MenuSeeder extends Seeder
     private function seedMenu(string $location, string $name, array $items): void
     {
         $menu = Menu::query()->firstOrCreate(
-            ['location' => $location],
-            ['name' => $name, 'is_active' => true],
+            ['location' => $location, 'locale' => config('localization.default')],
+            ['name' => $name, 'is_active' => true, ...Menu::translationDefaults()],
         );
 
         foreach ($items as $position => $item) {

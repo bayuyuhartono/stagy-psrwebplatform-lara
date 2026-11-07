@@ -18,7 +18,7 @@ use Illuminate\Database\Seeder;
 class RolePermissionSeeder extends Seeder
 {
     /** Modules whose full CRUD an Editor may exercise. */
-    private const EDITOR_CONTENT_MODULES = ['pages', 'posts', 'services', 'portfolio'];
+    private const EDITOR_CONTENT_MODULES = ['pages', 'posts', 'services', 'portfolio', 'pricing'];
 
     public function run(): void
     {
@@ -122,7 +122,7 @@ class RolePermissionSeeder extends Seeder
     {
         return [
             'contact-messages.view', 'contact-messages.update', 'contact-messages.delete', 'contact-messages.restore',
-            'pages.view', 'posts.view', 'services.view', 'portfolio.view',
+            'pages.view', 'posts.view', 'services.view', 'portfolio.view', 'pricing.view',
             'media.view',
             'dashboard.view', 'global-search.view',
         ];

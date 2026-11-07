@@ -33,6 +33,7 @@
                             ['Posts', 'posts', route('cms.posts.index'), 'M4 4h16v16H4V4Zm4 5h8M8 13h8M8 17h5'],
                             ['Services', 'services', route('cms.services.index'), 'M12 3 4 7v10l8 4 8-4V7l-8-4Zm0 0v18M4 7l8 4 8-4'],
                             ['Portfolio', 'portfolio', route('cms.portfolio.index'), 'M4 7h16v13H4V7Zm4 0V4h8v3M4 12h16'],
+                            ['Pricing', 'pricing', route('cms.pricing.index'), 'M3 12V4h8l10 10-8 8L3 12Zm4.5-4.5h.01'],
                             ['Media', 'media', route('cms.media.index'), 'M4 5h16v14H4V5Zm3 10 3-3 2 2 3-4 3 5M8 9h.01'],
                             ['SEO', 'seo', route('cms.seo.index'), 'M4 12a8 8 0 1 1 16 0M12 8v4l3 2'],
                         ] as [$label, $navigationSection, $href, $icon])

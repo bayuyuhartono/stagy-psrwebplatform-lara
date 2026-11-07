@@ -10,6 +10,7 @@ class ContentBlockRegistry
         return collect(config('content_blocks'))
             ->map(fn (array $definition): array => [
                 'label' => $definition['label'],
+                'editor' => $definition['editor'] ?? 'custom',
                 'fields' => $definition['fields'],
             ])->all();
     }

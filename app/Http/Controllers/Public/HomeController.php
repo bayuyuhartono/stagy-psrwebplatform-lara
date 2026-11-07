@@ -7,7 +7,7 @@ use App\Features\Menus\Repositories\MenuRepository;
 use App\Features\Pages\Repositories\PageRepository;
 use App\Features\Portfolios\Repositories\PortfolioRepository;
 use App\Features\Services\Repositories\ServiceRepository;
-use App\Features\WebsiteSettings\Repositories\WebsiteSettingRepository;
+use App\Features\WebsiteSettings\Services\PublicWebsiteSettings;
 use App\Http\Controllers\Controller;
 use Illuminate\View\View;
 
@@ -17,7 +17,7 @@ class HomeController extends Controller
         PageRepository $pages,
         ServiceRepository $services,
         PortfolioRepository $portfolio,
-        WebsiteSettingRepository $websiteSettings,
+        PublicWebsiteSettings $publicSettings,
         MenuRepository $menus,
         BlockMediaResolver $blockMedia,
     ): View {
@@ -26,7 +26,7 @@ class HomeController extends Controller
         return view('public.home', [
             'page' => $page,
             'blockMedia' => $blockMedia->resolve($page?->blocks),
-            'settings' => $websiteSettings->public()->mapWithKeys(fn ($setting): array => [$setting->group->value => $setting->settings]),
+            'settings' => $publicSettings->forCurrentLocale(),
             'menu' => $menus->findActiveByLocationOrNull('header'),
             'services' => $services->paginatePublished([], 6)->getCollection(),
             'portfolio' => $portfolio->paginatePublished([], 4)->getCollection(),

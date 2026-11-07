@@ -2,6 +2,8 @@
 
 namespace App\Features\Taxonomies\Repositories;
 
+use App\Features\Posts\Enums\PostStatus;
+use App\Features\Posts\Enums\PostType;
 use App\Models\Category;
 use App\Models\Tag;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -28,6 +30,21 @@ class TaxonomyRepository
             ->withCount(['posts', 'portfolios'])
             ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * Current-locale categories that hold at least one published post of the type,
+     * for a listing's category filter.
+     *
+     * @return Collection<int, Category>
+     */
+    public function categoriesWithPublishedPosts(PostType $type): Collection
+    {
+        return Category::query()
+            ->forCurrentLocale()
+            ->whereHas('posts', fn ($query) => $query->where('type', $type)->where('status', PostStatus::Published)->where('published_at', '<=', now()))
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'locale']);
     }
 
     public function findCategoryBySlug(string $slug): Category

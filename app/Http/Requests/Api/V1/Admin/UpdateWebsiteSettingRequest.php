@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api\V1\Admin;
 use App\Features\Themes\Services\ThemeManager;
 use App\Features\WebsiteSettings\Enums\WebsiteSettingGroup;
 use App\Models\Media;
+use App\Rules\LocalizedText;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,7 +30,7 @@ class UpdateWebsiteSettingRequest extends FormRequest
         return match (WebsiteSettingGroup::from((string) $this->route('group'))) {
             WebsiteSettingGroup::General => [
                 'site_name' => ['required', 'string', 'max:255'],
-                'tagline' => ['nullable', 'string', 'max:500'],
+                'tagline' => ['nullable', new LocalizedText(500)],
                 'locale' => ['required', 'string', 'regex:/^[a-z]{2}(?:_[A-Z]{2})?$/'],
                 'timezone' => ['required', 'timezone:all'],
             ],
@@ -42,24 +43,27 @@ class UpdateWebsiteSettingRequest extends FormRequest
             WebsiteSettingGroup::Contact => [
                 'email' => ['nullable', 'email:rfc', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:50', 'regex:/^[0-9+().\-\s]+$/'],
+                'whatsapp' => ['nullable', 'string', 'max:50', 'regex:/^[0-9+().\-\s]+$/'],
                 'address' => ['nullable', 'string', 'max:1000'],
+                'business_hours' => ['nullable', new LocalizedText(160)],
             ],
             WebsiteSettingGroup::Social => [
                 'facebook_url' => ['nullable', 'url:http,https', 'max:2048'],
                 'instagram_url' => ['nullable', 'url:http,https', 'max:2048'],
                 'linkedin_url' => ['nullable', 'url:http,https', 'max:2048'],
+                'tiktok_url' => ['nullable', 'url:http,https', 'max:2048'],
                 'youtube_url' => ['nullable', 'url:http,https', 'max:2048'],
                 'x_url' => ['nullable', 'url:http,https', 'max:2048'],
             ],
             WebsiteSettingGroup::Seo => [
-                'default_title' => ['nullable', 'string', 'max:70'],
-                'default_description' => ['nullable', 'string', 'max:170'],
+                'default_title' => ['nullable', new LocalizedText(70)],
+                'default_description' => ['nullable', new LocalizedText(170)],
                 'social_image_id' => ['nullable', 'uuid', Rule::exists(Media::class, 'id')->whereNull('deleted_at')],
             ],
             WebsiteSettingGroup::Experience => [
                 'maintenance_mode' => ['required', 'boolean'],
                 'announcement_enabled' => ['required', 'boolean'],
-                'announcement' => ['nullable', 'string', 'max:1000', 'required_if:announcement_enabled,true'],
+                'announcement' => ['nullable', new LocalizedText(1000), 'required_if:announcement_enabled,true'],
             ],
             WebsiteSettingGroup::Theme => $this->themeRules(),
         };

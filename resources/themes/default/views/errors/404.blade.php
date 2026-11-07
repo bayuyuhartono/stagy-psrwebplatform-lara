@@ -1,8 +1,8 @@
-@inject('websiteSettings', 'App\Features\WebsiteSettings\Repositories\WebsiteSettingRepository')
+@inject('publicSettings', 'App\Features\WebsiteSettings\Services\PublicWebsiteSettings')
 @inject('menus', 'App\Features\Menus\Repositories\MenuRepository')
 
 @php
-    $settings = $websiteSettings->public()->mapWithKeys(fn ($setting) => [$setting->group->value => $setting->settings]);
+    $settings = $publicSettings->forCurrentLocale();
     $menu = $menus->findActiveByLocationOrNull('header');
 @endphp
 

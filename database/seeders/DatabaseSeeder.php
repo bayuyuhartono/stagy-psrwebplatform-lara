@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             'posts.view', 'posts.create', 'posts.update', 'posts.update.any', 'posts.delete', 'posts.restore',
             'services.view', 'services.create', 'services.update', 'services.delete', 'services.restore',
             'portfolio.view', 'portfolio.create', 'portfolio.update', 'portfolio.delete', 'portfolio.restore',
+            'pricing.view', 'pricing.create', 'pricing.update', 'pricing.delete', 'pricing.restore',
             'contact-messages.view', 'contact-messages.update', 'contact-messages.delete', 'contact-messages.restore',
             'taxonomies.view', 'taxonomies.create', 'taxonomies.update', 'taxonomies.delete',
             'website-settings.view', 'website-settings.update',
@@ -66,8 +67,12 @@ class DatabaseSeeder extends Seeder
         FeatureFlag::query()->firstOrCreate(['name' => 'seo'], ['enabled' => true]);
         FeatureFlag::query()->firstOrCreate(['name' => 'menus'], ['enabled' => true]);
         FeatureFlag::query()->firstOrCreate(['name' => 'posts'], ['enabled' => true]);
-        FeatureFlag::query()->firstOrCreate(['name' => 'services'], ['enabled' => true]);
-        FeatureFlag::query()->firstOrCreate(['name' => 'portfolio'], ['enabled' => true]);
+        // The Stagy site has no services or portfolio; they start switched off there.
+        $isStagy = config('themes.active') === 'stagy';
+
+        FeatureFlag::query()->firstOrCreate(['name' => 'services'], ['enabled' => ! $isStagy]);
+        FeatureFlag::query()->firstOrCreate(['name' => 'portfolio'], ['enabled' => ! $isStagy]);
+        FeatureFlag::query()->firstOrCreate(['name' => 'pricing'], ['enabled' => true]);
         FeatureFlag::query()->firstOrCreate(['name' => 'contact-messages'], ['enabled' => true]);
         FeatureFlag::query()->firstOrCreate(['name' => 'website-settings'], ['enabled' => true]);
         FeatureFlag::query()->firstOrCreate(['name' => 'integrations'], ['enabled' => true]);
@@ -100,6 +105,12 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Super Admin', 'password' => 'password'],
         );
         $user->roles()->sync([$superAdmin->getKey()]);
+
+        if ($isStagy) {
+            $this->call(StagySiteSeeder::class);
+
+            return;
+        }
 
         // MenuSeeder links page-typed items, so it must run after PageSeeder.
         $this->call([

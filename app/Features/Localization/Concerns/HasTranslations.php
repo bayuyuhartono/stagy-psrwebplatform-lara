@@ -24,6 +24,20 @@ trait HasTranslations
         });
     }
 
+    /**
+     * The locale and a fresh translation group, for writes that bypass model
+     * events (seeders running under WithoutModelEvents, bulk inserts).
+     *
+     * @return array{locale: string, translation_group_id: string}
+     */
+    public static function translationDefaults(?string $locale = null): array
+    {
+        return [
+            'locale' => $locale ?? app(LocaleRegistry::class)->default(),
+            'translation_group_id' => (string) Str::uuid7(),
+        ];
+    }
+
     public function initializeHasTranslations(): void
     {
         $this->mergeFillable(['locale', 'translation_group_id']);

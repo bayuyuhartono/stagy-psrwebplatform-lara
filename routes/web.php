@@ -10,6 +10,7 @@ use App\Http\Controllers\Cms\MenuController as CmsMenuController;
 use App\Http\Controllers\Cms\PageController as CmsPageController;
 use App\Http\Controllers\Cms\PortfolioController as CmsPortfolioController;
 use App\Http\Controllers\Cms\PostController as CmsPostController;
+use App\Http\Controllers\Cms\PricingController as CmsPricingController;
 use App\Http\Controllers\Cms\SeoController as CmsSeoController;
 use App\Http\Controllers\Cms\ServiceController as CmsServiceController;
 use App\Http\Controllers\Cms\SettingsController as CmsSettingsController;
@@ -95,6 +96,9 @@ Route::middleware('auth')->prefix('cms')->name('cms.')->group(function (): void 
         Route::get('portfolio/create', [CmsPortfolioController::class, 'create'])->name('portfolio.create');
         Route::get('portfolio/{portfolio}/edit', [CmsPortfolioController::class, 'edit'])->name('portfolio.edit');
     });
+    Route::get('pricing', CmsPricingController::class)
+        ->middleware('feature:pricing')
+        ->name('pricing.index');
     Route::get('menus', CmsMenuController::class)
         ->middleware('feature:menus')
         ->name('menus.index');

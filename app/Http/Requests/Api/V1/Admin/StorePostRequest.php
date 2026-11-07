@@ -7,6 +7,7 @@ use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Enums\PostType;
 use App\Http\Requests\Concerns\ValidatesTranslations;
 use App\Models\Category;
+use App\Models\Media;
 use App\Models\Post;
 use App\Models\Tag;
 use App\Rules\ValidContentBlocks;
@@ -39,6 +40,8 @@ class StorePostRequest extends FormRequest
             'type' => ['required', Rule::enum(PostType::class)],
             'status' => ['required', Rule::enum(PostStatus::class)],
             'excerpt' => ['nullable', 'string', 'max:1000'],
+            'cover_image_id' => ['nullable', 'uuid', Rule::exists(Media::class, 'id')],
+            'is_featured' => ['sometimes', 'boolean'],
             'blocks' => ['present', 'array', 'max:100', new ValidContentBlocks($blockRegistry)],
             'published_at' => ['nullable', 'date'],
             'category_ids' => ['sometimes', 'array', 'max:20'],

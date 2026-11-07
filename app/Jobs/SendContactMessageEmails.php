@@ -54,7 +54,8 @@ class SendContactMessageEmails implements ShouldQueue
             ));
         }
 
-        if ($settings->auto_reply_enabled) {
+        // Demo requests may leave only a WhatsApp number; there is no one to auto-reply to then.
+        if ($settings->auto_reply_enabled && filled($this->contactMessage->email)) {
             $mailer->to($this->contactMessage->email)->send(new ContactMessageAutoReply(
                 recipientName: $this->contactMessage->name,
                 replyBody: (string) $settings->auto_reply_body,

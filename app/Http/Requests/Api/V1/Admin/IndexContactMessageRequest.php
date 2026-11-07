@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Api\V1\Admin;
 
+use App\Features\ContactMessages\Enums\ContactFormType;
 use App\Features\ContactMessages\Enums\ContactMessageStatus;
+use App\Features\ContactMessages\Enums\GuestEstimate;
 use App\Models\ContactMessage;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -28,6 +30,10 @@ class IndexContactMessageRequest extends FormRequest
     {
         return [
             'status' => ['sometimes', Rule::enum(ContactMessageStatus::class)],
+            'form_type' => ['sometimes', Rule::enum(ContactFormType::class)],
+            'guest_estimate' => ['sometimes', Rule::enum(GuestEstimate::class)],
+            'event_from' => ['sometimes', 'date'],
+            'event_to' => ['sometimes', 'date', 'after_or_equal:event_from'],
             'assigned_to' => ['sometimes', 'uuid', Rule::exists(User::class, 'id')],
             'date_from' => ['sometimes', 'date'],
             'date_to' => ['sometimes', 'date', 'after_or_equal:date_from'],

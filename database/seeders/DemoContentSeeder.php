@@ -44,7 +44,7 @@ class DemoContentSeeder extends Seeder
 
         foreach ($names as $name) {
             $slug = str($name)->slug()->toString();
-            $resolved[$slug] = $model::query()->firstOrCreate(['slug' => $slug], ['name' => $name]);
+            $resolved[$slug] = $model::query()->firstOrCreate(['slug' => $slug], ['name' => $name, ...($model === Category::class ? Category::translationDefaults() : [])]);
         }
 
         return $resolved;
@@ -119,6 +119,7 @@ class DemoContentSeeder extends Seeder
             $post = Post::query()->firstOrCreate(
                 ['slug' => str($title)->slug()->toString()],
                 [
+                    ...Post::translationDefaults(),
                     'title' => $title,
                     'type' => $type,
                     'status' => PostStatus::Published,

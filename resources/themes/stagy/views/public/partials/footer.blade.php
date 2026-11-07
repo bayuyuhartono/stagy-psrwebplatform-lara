@@ -16,7 +16,7 @@
     <div class="mx-auto flex max-w-290 flex-col">
         <div class="flex flex-wrap gap-x-14 gap-y-10 pb-12">
             <div class="flex min-w-0 flex-[1.4_1_17.5rem] flex-col gap-4.5">
-                <img src="{{ Vite::asset('resources/themes/stagy/assets/images/logo.png') }}" alt="{{ $siteName }}" width="900" height="392" class="h-11 w-auto self-start">
+                <img src="{{ $logoUrl }}" alt="{{ $siteName }}" @if (blank($brandLogoUrl ?? null)) width="900" height="392" @endif class="h-11 w-auto self-start">
                 <p class="max-w-80 text-[0.8125rem] leading-[1.85] text-public-muted">{{ $settings->get('general', [])['tagline'] ?? __('theme::site.footer_tagline') }}</p>
                 @if ($socialLinks->isNotEmpty())
                     <div class="flex gap-2.5">

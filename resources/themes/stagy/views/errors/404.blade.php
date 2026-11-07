@@ -1,10 +1,10 @@
-@inject('websiteSettings', 'App\Features\WebsiteSettings\Repositories\WebsiteSettingRepository')
+@inject('publicSettings', 'App\Features\WebsiteSettings\Services\PublicWebsiteSettings')
 @inject('menuRepository', 'App\Features\Menus\Repositories\MenuRepository')
 @inject('contentUrls', 'App\Features\Seo\Services\PublicUrlGenerator')
 @inject('whatsAppLink', 'App\Features\WebsiteSettings\Services\WhatsAppLink')
 
 @php
-    $settings = $websiteSettings->public()->mapWithKeys(fn ($setting) => [$setting->group->value => $setting->settings]);
+    $settings = $publicSettings->forCurrentLocale();
     $menu = $menuRepository->findActiveByLocationOrNull('header');
     $contactWhatsappUrl = $whatsAppLink->url($settings->get('contact', [])['whatsapp'] ?? $settings->get('contact', [])['phone'] ?? null);
     $highlight = '<span class="text-public-accent">'.e(__('theme::site.not_found.highlight')).'</span>';

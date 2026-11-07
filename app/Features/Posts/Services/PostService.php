@@ -28,7 +28,7 @@ class PostService
             $post->tags()->sync($tagIds);
             $this->auditLogger->record('post.created', $post, newValues: $post->getAttributes());
 
-            return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug']);
+            return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage']);
         });
     }
 
@@ -47,7 +47,7 @@ class PostService
             }
             $this->auditLogger->record('post.updated', $post, $oldValues, $post->getAttributes());
 
-            return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug']);
+            return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage']);
         });
     }
 
@@ -62,7 +62,7 @@ class PostService
         $post->restore();
         $this->auditLogger->record('post.restored', $post, newValues: $post->getAttributes());
 
-        return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug']);
+        return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage']);
     }
 
     /** @param array<string, mixed> $attributes
