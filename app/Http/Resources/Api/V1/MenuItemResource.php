@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
-use App\Features\Menus\Enums\MenuItemType;
+use App\Features\Seo\Services\PublicUrlGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +19,7 @@ class MenuItemResource extends JsonResource
             'id' => $this->id,
             'label' => $this->label,
             'type' => $this->type->value,
-            'url' => $this->type === MenuItemType::Page ? '/'.ltrim((string) $this->page?->slug, '/') : $this->url,
+            'url' => (new PublicUrlGenerator)->forMenuItem($this->resource),
             'target' => $this->target->value,
             'position' => $this->position,
             'page' => $this->when($this->page !== null, fn (): array => ['id' => $this->page->id, 'slug' => $this->page->slug]),

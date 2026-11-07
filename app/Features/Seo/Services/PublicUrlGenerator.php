@@ -3,6 +3,8 @@
 namespace App\Features\Seo\Services;
 
 use App\Features\Localization\Services\LocaleRegistry;
+use App\Features\Menus\Enums\MenuItemType;
+use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\Portfolio;
 use App\Models\Post;
@@ -13,6 +15,14 @@ class PublicUrlGenerator
 {
     public function for(Model $content): string
     {
+        return url($this->pathFor($content));
+    }
+
+    /**
+     * The site-relative path of a piece of content, including its locale prefix.
+     */
+    public function pathFor(Model $content): string
+    {
         $path = match (true) {
             $content instanceof Page => $content->slug === 'home' ? '/' : '/'.$content->slug,
             $content instanceof Post => '/'.$content->type->value.'/'.$content->slug,
@@ -22,7 +32,19 @@ class PublicUrlGenerator
         };
         $locale = $content->getAttribute('locale');
 
-        return url(is_string($locale) ? (new LocaleRegistry)->localizePath($path, $locale) : $path);
+        return is_string($locale) ? (new LocaleRegistry)->localizePath($path, $locale) : $path;
+    }
+
+    /**
+     * Where a menu item points: its linked page's path, or its custom URL.
+     */
+    public function forMenuItem(MenuItem $item): string
+    {
+        if ($item->type === MenuItemType::Page) {
+            return $item->page !== null ? $this->pathFor($item->page) : '#';
+        }
+
+        return (string) $item->url;
     }
 
     public function canonicalFor(Model $content): string

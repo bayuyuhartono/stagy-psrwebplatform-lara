@@ -8,6 +8,16 @@
     --public-surface: #2b2b2b;
     --public-accent: #c7ff4a;
     --public-paper: #f3f2ed;
+
+    /* Supporting public tokens. Themes override any of these in their own stylesheet. */
+    --public-muted: #5c5c5c;
+    --public-line: #dcdad2;
+    --public-mist: #ebe9e2;
+    --public-mint: #e4e2da;
+    --public-sage: #d6d4cb;
+    --public-deep: #2b2b2b;
+    --public-on-ink: #bdbdbd;
+    --public-font: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
@@ -19,4 +29,12 @@
     --color-public-surface: var(--public-surface);
     --color-public-accent: var(--public-accent);
     --color-public-paper: var(--public-paper);
+    --color-public-muted: var(--public-muted);
+    --color-public-line: var(--public-line);
+    --color-public-mist: var(--public-mist);
+    --color-public-mint: var(--public-mint);
+    --color-public-sage: var(--public-sage);
+    --color-public-deep: var(--public-deep);
+    --color-public-on-ink: var(--public-on-ink);
+    --font-public: var(--public-font);
 }

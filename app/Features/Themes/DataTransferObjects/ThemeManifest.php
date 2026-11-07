@@ -13,6 +13,7 @@ class ThemeManifest
 {
     /**
      * @param  array<string, SettingSchema>  $settings
+     * @param  array<string, string>  $menuLocations  Menu locations the theme renders, keyed by location with a human label.
      */
     public function __construct(
         public string $slug,
@@ -21,6 +22,7 @@ class ThemeManifest
         public ?string $author,
         public ?string $description,
         public array $settings,
+        public array $menuLocations = [],
     ) {}
 
     /**
@@ -41,6 +43,7 @@ class ThemeManifest
             author: $data['author'] ?? null,
             description: $data['description'] ?? null,
             settings: self::normalizeSettings($slug, $data['settings'] ?? []),
+            menuLocations: self::normalizeMenuLocations($slug, $data['menu_locations'] ?? ['header' => 'Header']),
         );
     }
 
@@ -52,6 +55,20 @@ class ThemeManifest
     public function defaults(): array
     {
         return array_map(fn (array $schema): mixed => $schema['default'], $this->settings);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function normalizeMenuLocations(string $slug, mixed $locations): array
+    {
+        if (! is_array($locations)) {
+            throw new InvalidArgumentException("Theme [{$slug}] declares a non-array [menu_locations].");
+        }
+
+        return collect($locations)
+            ->mapWithKeys(fn (mixed $label, string|int $location): array => [(string) $location => is_string($label) ? $label : (string) $location])
+            ->all();
     }
 
     /**

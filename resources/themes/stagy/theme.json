@@ -1,0 +1,38 @@
+{
+    "name": "Stagy",
+    "version": "1.0.0",
+    "author": "Pesoros",
+    "description": "Landing site for Stagy, the event registration and check-in system for event organisers: navy and sage palette, Horizon type, bilingual (ID/EN).",
+    "menu_locations": {
+        "header": "Header",
+        "footer-product": "Footer · Product",
+        "footer-help": "Footer · Help"
+    },
+    "settings": {
+        "demo_page_slug": {
+            "label": "Request-demo page slug",
+            "type": "string",
+            "default": "demo"
+        },
+        "show_whatsapp_button": {
+            "label": "Show floating WhatsApp button",
+            "type": "boolean",
+            "default": true
+        },
+        "show_powered_by": {
+            "label": "Show \"Powered by\" credit",
+            "type": "boolean",
+            "default": true
+        },
+        "powered_by_label": {
+            "label": "\"Powered by\" name",
+            "type": "string",
+            "default": "Pesoros"
+        },
+        "powered_by_url": {
+            "label": "\"Powered by\" link",
+            "type": "string",
+            "default": "https://pesoros.com"
+        }
+    }
+}

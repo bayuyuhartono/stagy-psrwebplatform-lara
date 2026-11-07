@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Features\Integrations\Services\PublicIntegrationResolver;
 use App\Features\Localization\Services\AlternateUrlResolver;
+use App\Features\Menus\Repositories\MenuRepository;
 use App\Features\Themes\Services\ThemeManager;
+use App\Features\WebsiteSettings\Services\WhatsAppLink;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Portfolio;
@@ -97,7 +99,14 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $view->with([
+            // Every menu the active theme renders, keyed by location (null when not set up yet).
+            'menus' => collect($themes->active()->menuLocations)
+                ->mapWithKeys(fn (string $label, string $location): array => [$location => $this->app->make(MenuRepository::class)->findActiveByLocationOrNull($location)])
+                ->all(),
             'alternateUrls' => $alternates,
+            'whatsappUrl' => $this->app->make(WhatsAppLink::class)->url(
+                $settings->get('contact', [])['whatsapp'] ?? $settings->get('contact', [])['phone'] ?? null,
+            ),
             'languageSwitcher' => $this->app->make(AlternateUrlResolver::class)->switcher($alternates),
             'integrations' => app(PublicIntegrationResolver::class)->enabledConfigs(),
             'defaultSocialImageUrl' => $socialImageId ? Media::query()->find($socialImageId)?->url : null,

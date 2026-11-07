@@ -37,8 +37,31 @@ class ThemeManager
 
             if ($slug !== null && File::isDirectory($path)) {
                 $finder->prependLocation($path);
+                // Laravel resolves error pages ("errors::404") from config('view.paths'), not the finder.
+                config(['view.paths' => array_values(array_unique([$path, ...config('view.paths', [])]))]);
             }
         }
+
+        $this->registerTranslations();
+    }
+
+    /**
+     * Expose the theme's own UI strings under the "theme::" namespace, e.g.
+     * __('theme::site.request_demo'). The active theme wins; the fallback
+     * theme supplies strings the active theme does not ship.
+     */
+    private function registerTranslations(): void
+    {
+        $slug = File::isDirectory($this->langPath($this->activeSlug())) ? $this->activeSlug() : $this->fallbackSlug();
+
+        if ($slug !== null && File::isDirectory($this->langPath($slug))) {
+            app('translator')->addNamespace('theme', $this->langPath($slug));
+        }
+    }
+
+    public function langPath(?string $slug): string
+    {
+        return rtrim((string) config('themes.path'), '/')."/{$slug}/lang";
     }
 
     public function activeSlug(): string

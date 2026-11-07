@@ -6,12 +6,12 @@ Implementasi landing site **Stagy** (sistem registrasi & check-in event untuk EO
 - **Dimulai:** 2026-11-07
 - **Legend:** `[x]` selesai · `[~]` sebagian · `[ ]` belum · ⏸ menunggu keputusan
 
-**Fase aktif:** Fase 1 selesai — menunggu review sebelum Fase 2 (branch `feat/stagy-site`)
+**Fase aktif:** Fase 2 selesai — menunggu review sebelum Fase 3 (branch `feat/stagy-site`)
 
 | Fase | Judul | Status | Commit |
 | --- | --- | --- | --- |
-| 1 | Fondasi i18n | `[x]` | `feat(stagy): fase 1 — fondasi i18n` |
-| 2 | Theme `stagy` | `[ ]` | — |
+| 1 | Fondasi i18n | `[x]` | `925485b` |
+| 2 | Theme `stagy` | `[x]` | _user_ |
 | 3 | Block type baru | `[ ]` | — |
 | 4 | Modul Pricing | `[ ]` | — |
 | 5 | Form Minta Demo | `[ ]` | — |
@@ -48,7 +48,7 @@ Implementasi landing site **Stagy** (sistem registrasi & check-in event untuk EO
 5. `vendor/bin/pint --dirty --format agent`; `npm run build` bila ada perubahan frontend.
 6. Catat keputusan baru yang berlaku jangka panjang via Boost `record-rule`.
 7. Centang item di bagian fase, tulis catatan singkat bila ada penyimpangan dari rencana.
-8. Commit terpisah per fase: `feat(stagy): fase N — <judul>`, lalu **review bersama user** sebelum lanjut ke fase berikutnya.
+8. **Tidak commit/push** — perubahan ditinggal di working tree; user yang commit & push. Sertakan usulan pesan commit `feat(stagy): fase N — <judul>`, lalu **review bersama user** sebelum lanjut ke fase berikutnya.
 
 ---
 
@@ -78,18 +78,29 @@ Implementasi landing site **Stagy** (sistem registrasi & check-in event untuk EO
 
 ## Fase 2 — Theme `stagy`
 
-- [ ] `resources/themes/stagy/theme.json` + settings theme
-- [ ] String UI theme lewat `lang/id` & `lang/en` (dipindah dari Fase 1)
-- [ ] Token warna `public-*` versi Stagy (navy `#1E2956`, hijau `#486C65`, mint `#F5F8F6`/`#EDF2F0`, border `#D6E0DC`, muted `#525C7A`)
-- [ ] Font Horizon (self-hosted) + skala tipografi yang dinaikkan
-- [ ] Aset brand: logo, favicon 16/32/180/512 (diambil dari canvas)
-- [ ] Layout + navbar desktop (link aktif) + navbar HP (toggle menu, aksesibel)
-- [ ] Footer: brand, menu Produk & Bantuan, kontak, sosial, "Powered by Pesoros"
-- [ ] Tombol WhatsApp melayang (dari settings)
-- [ ] Switcher bahasa "ID · EN"
-- [ ] Halaman 404 "Tiket tidak ditemukan"
-- [ ] Theme aktif = `stagy` untuk instalasi ini; feature flag Services/Portfolio/News/Contact dimatikan
-- [ ] Test: theme resolve, view theme dipakai, 404 ter-render
+- [x] `resources/themes/stagy/theme.json`: settings (`demo_page_slug`, tombol WA, "Powered by") + `menu_locations` (`header`, `footer-product`, `footer-help`)
+- [x] String UI theme per bahasa di `resources/themes/stagy/lang/{id,en}/site.php`, dipanggil lewat `__('theme::site.*')` (dipindah dari Fase 1)
+- [x] Token warna: `public-*` di-override di `stagy.css`; token pendukung baru (`public-muted`, `-line`, `-mist`, `-mint`, `-sage`, `-deep`, `-on-ink`, `font-public`) di `resources/css/theme.css`
+- [x] Font Horizon (self-hosted via Vite) + skala tipografi dinaikkan (body 15px, label ≥ 12px)
+- [x] Aset brand: logo + favicon 16/32/512 + apple-touch-icon 180 di `resources/themes/stagy/assets/`
+- [x] Layout + navbar desktop (link aktif `aria-current`) + navbar HP (toggle, ikon buka/tutup) + skip link
+- [x] Footer: brand, tagline, sosial, kolom menu Produk & Bantuan, kontak (WA, email, alamat, jam operasional), "Powered by Pesoros"
+- [x] Tombol WhatsApp melayang (muncul hanya jika nomor diisi)
+- [x] Switcher bahasa "ID · EN" (desktop & HP)
+- [x] Halaman 404 "Tiket tidak ditemukan" (ID & EN)
+- [x] Theme aktif = `stagy` di `.env.example`; test tetap memakai `default` (`phpunit.xml`)
+- [x] Test: 11 test di `tests/Feature/StagyThemeTest.php`
+
+**Dipindah dari Fase 2:**
+- Mematikan feature flag Services/Portfolio/Contact → Fase 8 (flag adalah data, di-seed). News tidak punya flag sendiri; theme Stagy tidak menautkannya.
+
+**Catatan:**
+- **Bug lama diperbaiki:** halaman error theme (`errors/404`) tidak pernah dipakai karena Laravel mencari view error dari `config('view.paths')`. `ThemeManager::boot()` sekarang menambahkan path theme ke sana.
+- Head SEO dipindah ke partial bersama `public/partials/seo-head.blade.php` (di theme `default`, dipakai kedua theme).
+- `MenuItemResource.url` dan link menu di theme sekarang memakai `PublicUrlGenerator::forMenuItem()`, jadi halaman EN otomatis ber-prefix `/en`.
+- Kunci settings baru yang sudah dibaca theme: `contact.whatsapp`, `contact.business_hours`, `social.tiktok_url`. Field CMS-nya dibuat di Fase 7.
+- Konten halaman masih dirender oleh block bawaan theme `default` (warna sudah Stagy) sampai block Stagy dibuat di Fase 3.
+- Belum dicek visual di browser.
 
 ## Fase 3 — Block type baru
 
@@ -148,6 +159,7 @@ Didaftarkan di `config/content_blocks.php` (field + rules), di-render oleh theme
 - [ ] Data Pricing: 3 paket, 6 grup perbandingan, 11 add-on
 - [ ] FAQ 8 item, kategori blog (Panduan, Tips EO, Teknologi, Laporan) + 7 artikel contoh
 - [ ] Settings kontak/sosial dengan placeholder dari mockup
+- [ ] Feature flag: Services, Portfolio, Contact dimatikan (dipindah dari Fase 2)
 - [ ] Seeder idempotent (aman dijalankan ulang)
 
 ---
