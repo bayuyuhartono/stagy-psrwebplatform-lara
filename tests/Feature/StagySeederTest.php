@@ -34,10 +34,10 @@ test('the stagy seed creates the mockup content in Indonesian', function () {
 
     expect(Page::query()->where('locale', 'id')->pluck('slug')->sort()->values()->all())
         ->toBe(['blog', 'cara-kerja', 'demo', 'faq', 'fitur', 'harga', 'home', 'kebijakan-privasi', 'syarat-ketentuan'])
-        ->and(Menu::query()->pluck('location')->sort()->values()->all())->toBe(['footer-help', 'footer-product', 'header'])
-        ->and(PricingPlan::query()->orderBy('position')->pluck('name')->all())->toBe(['Basic', 'Professional', 'Enterprise'])
-        ->and(PricingComparisonRow::query()->count())->toBe(21)
-        ->and(PricingAddon::query()->count())->toBe(11)
+        ->and(Menu::query()->where('locale', 'id')->pluck('location')->sort()->values()->all())->toBe(['footer-help', 'footer-product', 'header'])
+        ->and(PricingPlan::query()->where('locale', 'id')->orderBy('position')->pluck('name')->all())->toBe(['Basic', 'Professional', 'Enterprise'])
+        ->and(PricingComparisonRow::query()->where('locale', 'id')->count())->toBe(21)
+        ->and(PricingAddon::query()->where('locale', 'id')->count())->toBe(11)
         ->and(Category::query()->count())->toBe(4)
         ->and(Post::query()->count())->toBe(7)
         ->and(Post::query()->where('is_featured', true)->value('slug'))->toBe('cara-membuat-buku-tamu-digital-untuk-event-korporat')
@@ -73,12 +73,12 @@ test('running the seed again changes nothing and keeps editors\' changes', funct
 
     test()->seed(DatabaseSeeder::class);
 
-    expect(Page::query()->count())->toBe(9)
+    expect(Page::query()->count())->toBe(17)
         ->and(Page::query()->where('slug', 'harga')->value('title'))->toBe('Harga (diedit)')
-        ->and(PricingPlan::query()->count())->toBe(3)
-        ->and(PricingComparisonRow::query()->count())->toBe(21)
+        ->and(PricingPlan::query()->count())->toBe(6)
+        ->and(PricingComparisonRow::query()->count())->toBe(42)
         ->and(Post::query()->count())->toBe(7)
-        ->and(Menu::query()->count())->toBe(3)
+        ->and(Menu::query()->count())->toBe(6)
         ->and(WebsiteSetting::query()->where('group', 'general')->value('settings'))->toMatchArray(['site_name' => 'Stagy ID', 'tagline' => 'Tagline sendiri']);
 });
 
