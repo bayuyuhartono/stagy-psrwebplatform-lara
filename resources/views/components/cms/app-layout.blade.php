@@ -1,4 +1,7 @@
 @props(['title' => 'Dashboard', 'section' => 'dashboard'])
+@inject('featureFlags', 'App\Features\Settings\Repositories\FeatureFlagRepository')
+{{-- Modules switched off for this project are hidden from navigation; their routes already 404. --}}
+@php($enabledFeatures = $featureFlags->enabledNames())
 
 <!DOCTYPE html>
 {{-- The CMS interface is written in English regardless of the content locale. --}}
@@ -28,15 +31,16 @@
                     <p class="px-3 text-[0.65rem] font-semibold tracking-[0.18em] text-white/40 uppercase">Workspace</p>
                     <div class="mt-2 grid gap-1">
                         @foreach ([
-                            ['Dashboard', 'dashboard', route('cms.dashboard'), 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z'],
-                            ['Pages', 'pages', route('cms.pages.index'), 'M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5'],
-                            ['Posts', 'posts', route('cms.posts.index'), 'M4 4h16v16H4V4Zm4 5h8M8 13h8M8 17h5'],
-                            ['Services', 'services', route('cms.services.index'), 'M12 3 4 7v10l8 4 8-4V7l-8-4Zm0 0v18M4 7l8 4 8-4'],
-                            ['Portfolio', 'portfolio', route('cms.portfolio.index'), 'M4 7h16v13H4V7Zm4 0V4h8v3M4 12h16'],
-                            ['Pricing', 'pricing', route('cms.pricing.index'), 'M3 12V4h8l10 10-8 8L3 12Zm4.5-4.5h.01'],
-                            ['Media', 'media', route('cms.media.index'), 'M4 5h16v14H4V5Zm3 10 3-3 2 2 3-4 3 5M8 9h.01'],
-                            ['SEO', 'seo', route('cms.seo.index'), 'M4 12a8 8 0 1 1 16 0M12 8v4l3 2'],
-                        ] as [$label, $navigationSection, $href, $icon])
+                            ['Dashboard', 'dashboard', route('cms.dashboard'), 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z', null],
+                            ['Pages', 'pages', route('cms.pages.index'), 'M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5', 'pages'],
+                            ['Posts', 'posts', route('cms.posts.index'), 'M4 4h16v16H4V4Zm4 5h8M8 13h8M8 17h5', 'posts'],
+                            ['Services', 'services', route('cms.services.index'), 'M12 3 4 7v10l8 4 8-4V7l-8-4Zm0 0v18M4 7l8 4 8-4', 'services'],
+                            ['Portfolio', 'portfolio', route('cms.portfolio.index'), 'M4 7h16v13H4V7Zm4 0V4h8v3M4 12h16', 'portfolio'],
+                            ['Pricing', 'pricing', route('cms.pricing.index'), 'M3 12V4h8l10 10-8 8L3 12Zm4.5-4.5h.01', 'pricing'],
+                            ['Media', 'media', route('cms.media.index'), 'M4 5h16v14H4V5Zm3 10 3-3 2 2 3-4 3 5M8 9h.01', 'media'],
+                            ['SEO', 'seo', route('cms.seo.index'), 'M4 12a8 8 0 1 1 16 0M12 8v4l3 2', 'seo'],
+                        ] as [$label, $navigationSection, $href, $icon, $feature])
+                            @continue($feature !== null && ! in_array($feature, $enabledFeatures, true))
                             <a href="{{ $href }}" data-nav-section="{{ $navigationSection }}" class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/8 hover:text-white {{ $section === $navigationSection ? 'bg-white/10 text-white' : 'text-white/65' }}">
                                 <svg class="size-5 text-white/45 group-hover:text-cms-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon }}" /></svg>
                                 {{ $label }}
@@ -46,7 +50,8 @@
 
                     <p class="mt-7 px-3 text-[0.65rem] font-semibold tracking-[0.18em] text-white/40 uppercase">Manage</p>
                     <div class="mt-2 grid gap-1">
-                        @foreach ([['Menus', 'menus', route('cms.menus.index')], ['Categories & Tags', 'taxonomies', route('cms.taxonomies.index')], ['Messages', 'messages', route('cms.messages.index')], ['Users & Roles', 'users-roles', route('cms.users-roles.index')], ['Audit Logs', 'audit-logs', route('cms.audit-logs.index')], ['Settings', 'settings', route('cms.settings.index')]] as [$label, $navigationSection, $href])
+                        @foreach ([['Menus', 'menus', route('cms.menus.index'), 'menus'], ['Categories & Tags', 'taxonomies', route('cms.taxonomies.index'), null], ['Messages', 'messages', route('cms.messages.index'), 'contact-messages'], ['Users & Roles', 'users-roles', route('cms.users-roles.index'), null], ['Audit Logs', 'audit-logs', route('cms.audit-logs.index'), null], ['Settings', 'settings', route('cms.settings.index'), null]] as [$label, $navigationSection, $href, $feature])
+                            @continue($feature !== null && ! in_array($feature, $enabledFeatures, true))
                             <a href="{{ $href }}" class="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-white/8 hover:text-white {{ $section === $navigationSection ? 'bg-white/10 text-white' : 'text-white/65' }}">{{ $label }}</a>
                         @endforeach
                     </div>

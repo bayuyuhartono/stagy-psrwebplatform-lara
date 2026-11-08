@@ -1,7 +1,7 @@
 @php($heroBlock = collect($page?->blocks ?? [])->firstWhere('type', 'hero'))
 @php($hero = $heroBlock['data'] ?? [])
 
-<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="localized_route('home')">
+<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="localized_route('home')" :noindex="$page === null">
     <section class="relative min-h-[48rem] overflow-hidden bg-public-ink text-white lg:min-h-screen">
         <div class="absolute -right-24 top-24 size-[28rem] rounded-full border border-white/10 sm:size-[40rem] lg:right-[-8rem] lg:top-[-3rem] lg:size-[55rem]"></div>
         <div class="absolute right-10 top-52 size-48 rounded-full bg-public-surface shadow-[0_0_0_5rem_color-mix(in_srgb,var(--color-public-surface)_20%,transparent)] sm:right-28 sm:size-64 lg:right-56 lg:top-36 lg:size-80"></div>

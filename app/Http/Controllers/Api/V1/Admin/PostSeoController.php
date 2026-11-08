@@ -17,7 +17,8 @@ class PostSeoController extends Controller
     {
         Gate::authorize('viewAny', Seo::class);
 
-        return new SeoResource($seo->forContent($post));
+        // Content without SEO yet gets the defaults an empty form starts from, rather than a 500.
+        return new SeoResource($seo->forContent($post) ?? new Seo);
     }
 
     public function update(UpdatePostSeoRequest $request, Post $post, UpdateSeoAction $update): SeoResource

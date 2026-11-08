@@ -38,3 +38,15 @@ test('the CMS session can authenticate against Sanctum API routes', function () 
         ->assertSuccessful()
         ->assertJsonPath('data.system.database', 'ok');
 });
+
+test('the sidebar hides modules switched off for the project', function () {
+    FeatureFlag::factory()->create(['name' => 'posts', 'enabled' => true]);
+    FeatureFlag::factory()->create(['name' => 'services', 'enabled' => false]);
+
+    $this->actingAs(User::factory()->create())
+        ->get('/cms')
+        ->assertSuccessful()
+        ->assertSee('data-nav-section="posts"', escape: false)
+        ->assertDontSee('data-nav-section="services"', escape: false)
+        ->assertDontSee('data-nav-section="portfolio"', escape: false);
+});

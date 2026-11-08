@@ -34,7 +34,7 @@
                         <span class="text-sm font-semibold text-cms-navy">URL slug</span>
                         <div class="flex h-12 overflow-hidden rounded-xl border border-cms-navy/10 bg-white focus-within:border-cms-gold focus-within:ring-3 focus-within:ring-cms-gold/15">
                             <span class="flex items-center border-r border-cms-navy/8 bg-cms-canvas/65 px-3 text-sm text-cms-navy/40">/</span>
-                            <input data-page-slug type="text" required maxlength="255" pattern="[A-Za-z0-9_-]+" placeholder="about-us" class="min-w-0 flex-1 px-3 text-sm outline-none">
+                            <input data-page-slug type="text" required maxlength="255" pattern="[A-Za-z0-9_\-]+" placeholder="about-us" class="min-w-0 flex-1 px-3 text-sm outline-none">
                         </div>
                     </label>
                 </section>

@@ -17,7 +17,8 @@ class PortfolioSeoController extends Controller
     {
         Gate::authorize('viewAny', Seo::class);
 
-        return new SeoResource($seo->forContent($portfolio));
+        // Content without SEO yet gets the defaults an empty form starts from, rather than a 500.
+        return new SeoResource($seo->forContent($portfolio) ?? new Seo);
     }
 
     public function update(UpdatePortfolioSeoRequest $request, Portfolio $portfolio, UpdateSeoAction $update): SeoResource

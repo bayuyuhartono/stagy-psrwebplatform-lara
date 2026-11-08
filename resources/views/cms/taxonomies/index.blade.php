@@ -45,7 +45,7 @@
                 </div>
                 <div class="mt-6 grid gap-4">
                     <label class="grid gap-2"><span class="text-xs font-semibold">Name</span><input data-taxonomy-name required maxlength="255" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-4 outline-none focus:border-cms-gold focus:ring-3 focus:ring-cms-gold/15"></label>
-                    <label class="grid gap-2"><span class="text-xs font-semibold">Slug</span><input data-taxonomy-slug required maxlength="255" pattern="[A-Za-z0-9_-]+" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-4 font-mono text-sm outline-none focus:border-cms-gold focus:ring-3 focus:ring-cms-gold/15"><span class="text-xs text-cms-navy/40">Used in public URLs and content filters.</span></label>
+                    <label class="grid gap-2"><span class="text-xs font-semibold">Slug</span><input data-taxonomy-slug required maxlength="255" pattern="[A-Za-z0-9_\-]+" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-4 font-mono text-sm outline-none focus:border-cms-gold focus:ring-3 focus:ring-cms-gold/15"><span class="text-xs text-cms-navy/40">Used in public URLs and content filters.</span></label>
                     <label data-taxonomy-locale-field class="grid gap-2"><span class="text-xs font-semibold">Language</span><select data-taxonomy-locale class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm disabled:bg-cms-canvas/65">@foreach (app(\App\Features\Localization\Services\LocaleRegistry::class)->options() as $code => $locale)<option value="{{ $code }}">{{ $locale['name'] }}</option>@endforeach</select></label>
                 </div>
                 <div class="mt-6 flex justify-between gap-3">

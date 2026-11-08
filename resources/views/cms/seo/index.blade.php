@@ -1,5 +1,5 @@
 <x-cms.app-layout title="SEO" section="seo">
-    @php($modules = collect([['pages', 'Pages', 'pages.view'], ['posts', 'Posts', 'posts.view'], ['services', 'Services', 'services.view'], ['portfolio', 'Portfolio', 'portfolio.view']])->filter(fn ($module) => auth()->user()->hasPermission($module[2]))->values())
+    @php($modules = collect([['pages', 'Pages', 'pages.view'], ['posts', 'Posts', 'posts.view'], ['services', 'Services', 'services.view'], ['portfolio', 'Portfolio', 'portfolio.view']])->filter(fn ($module) => auth()->user()->hasPermission($module[2]) && app(\App\Features\Settings\Repositories\FeatureFlagRepository::class)->isEnabled($module[0]))->values())
     <section data-seo-manager data-modules='@json($modules)' data-can-update="{{ auth()->user()->hasPermission('seo.update') ? 'true' : 'false' }}" class="grid gap-6">
         <div><p class="text-sm text-cms-navy/55">Review search metadata and improve content visibility.</p><h2 class="mt-1 text-2xl font-bold">SEO management</h2></div>
         <div data-seo-notice class="hidden rounded-xl border p-4 text-sm"></div>

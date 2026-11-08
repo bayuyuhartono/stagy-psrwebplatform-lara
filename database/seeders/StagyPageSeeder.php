@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Features\Pages\Enums\PageStatus;
+use App\Features\Seo\Services\SeoService;
 use App\Models\Page;
 use Illuminate\Database\Seeder;
 
@@ -15,10 +16,12 @@ use Illuminate\Database\Seeder;
  */
 class StagyPageSeeder extends Seeder
 {
-    public function run(): void
+    public function run(SeoService $seo): void
     {
+        $metadata = $this->seo();
+
         foreach ($this->pages() as $slug => [$title, $blocks]) {
-            Page::query()->firstOrCreate(
+            $page = Page::query()->firstOrCreate(
                 ['slug' => $slug, 'locale' => 'id'],
                 [
                     ...Page::translationDefaults('id'),
@@ -28,7 +31,33 @@ class StagyPageSeeder extends Seeder
                     'published_at' => now(),
                 ],
             );
+
+            // Like the page itself, SEO the team already edited in the CMS is left alone.
+            if (isset($metadata[$slug]) && ! $page->seo()->exists()) {
+                $seo->updateForContent($page, [...$metadata[$slug], 'robots_index' => true, 'robots_follow' => true, 'twitter_card' => 'summary_large_image']);
+            }
         }
+    }
+
+    /**
+     * A distinct search title and description per page, so results do not all
+     * repeat the site-wide default. A null title falls back to "<page title> · Stagy".
+     *
+     * @return array<string, array{meta_title: ?string, meta_description: string, focus_keyword: ?string}>
+     */
+    private function seo(): array
+    {
+        return [
+            'home' => ['meta_title' => 'Stagy · Registrasi & Check-in Event untuk Event Organizer', 'focus_keyword' => 'registrasi event', 'meta_description' => 'Import data tamu, kirim undangan QR lewat WhatsApp & email, lalu check-in tamu di venue dalam satu sistem. Laporan kehadiran siap dikirim ke klien.'],
+            'fitur' => ['meta_title' => 'Fitur Registrasi, Undangan QR & Check-in Event · Stagy', 'focus_keyword' => 'check-in event', 'meta_description' => 'Registrasi online, undangan WhatsApp & email dengan QR, scan QR atau RFID di venue, door prize, sertifikat, dan laporan kehadiran real-time.'],
+            'cara-kerja' => ['meta_title' => 'Cara Kerja Stagy: Dari Data Tamu sampai Laporan', 'focus_keyword' => 'cara kerja', 'meta_description' => 'Empat langkah bersama Stagy: kirim data tamu, undangan terkirim, check-in di venue, dan laporan siap. Tim kami mendampingi Anda sampai hari-H.'],
+            'harga' => ['meta_title' => 'Harga Paket Registrasi & Check-in Event · Stagy', 'focus_keyword' => 'harga', 'meta_description' => 'Paket registrasi & check-in event dengan harga per event, tanpa langganan. Bandingkan fitur tiap paket dan add-on yang bisa Anda tambahkan.'],
+            'faq' => ['meta_title' => 'FAQ Registrasi & Check-in Event · Stagy', 'focus_keyword' => 'faq', 'meta_description' => 'Jawaban untuk pertanyaan umum seputar registrasi tamu, undangan QR, check-in di venue, keamanan data, dan paket harga Stagy untuk Event Organizer.'],
+            'demo' => ['meta_title' => 'Minta Demo Sistem Registrasi Event · Stagy', 'focus_keyword' => 'demo', 'meta_description' => 'Jadwalkan demo Stagy untuk event klien Anda. Ceritakan perkiraan jumlah tamu dan tanggal acara, lalu tim kami akan menghubungi Anda.'],
+            'syarat-ketentuan' => ['meta_title' => null, 'focus_keyword' => null, 'meta_description' => 'Syarat dan ketentuan penggunaan layanan registrasi dan check-in event Stagy bagi Event Organizer dan klien mereka.'],
+            'kebijakan-privasi' => ['meta_title' => null, 'focus_keyword' => null, 'meta_description' => 'Bagaimana Stagy mengumpulkan, memakai, menyimpan, dan melindungi data tamu serta data klien Event Organizer yang memakai layanan kami.'],
+            'blog' => ['meta_title' => 'Blog Stagy: Tips Registrasi & Check-in Event', 'focus_keyword' => 'check-in event', 'meta_description' => 'Tips dan panduan seputar registrasi tamu, undangan digital, dan check-in event untuk Event Organizer, dari tim Stagy.'],
+        ];
     }
 
     /**

@@ -12,4 +12,19 @@ class FeatureFlagRepository
     {
         return FeatureFlag::query()->orderBy('name')->get();
     }
+
+    /**
+     * Names of the switched-on features, read once per instance.
+     *
+     * @return list<string>
+     */
+    public function enabledNames(): array
+    {
+        return once(fn (): array => FeatureFlag::query()->where('enabled', true)->pluck('name')->all());
+    }
+
+    public function isEnabled(string $feature): bool
+    {
+        return in_array($feature, $this->enabledNames(), true);
+    }
 }

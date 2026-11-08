@@ -13,6 +13,9 @@
     $locale = app()->getLocale();
     $postUrl = fn ($post) => localized_route($listingRoute.'.show', $post->slug);
     $postDate = fn ($post) => $post->published_at?->locale($locale)->translatedFormat('j M Y');
+    // Later pages list different posts, so each is its own canonical rather than a duplicate of page one.
+    $listingCanonical = ($archive ? localized_route($listingRoute.'.'.$archive['taxonomy'], $archive['term']->slug) : localized_route($listingRoute.'.index'))
+        .($posts->currentPage() > 1 ? '?page='.$posts->currentPage() : '');
 @endphp
 
 <x-public.layout
@@ -20,7 +23,8 @@
     :settings="$settings"
     :menu="$menu"
     :meta-title="$archive ? $archive['term']->name.' — '.__('theme::site.blog.eyebrow') : ($introPage?->title ?? __('theme::site.blog.eyebrow'))"
-    :canonical="$archive ? localized_route($listingRoute.'.'.$archive['taxonomy'], $archive['term']->slug) : localized_route($listingRoute.'.index')">
+    :canonical="$listingCanonical"
+    :noindex="$posts->isEmpty()">
 
     @if ($introBlocks->isNotEmpty())
         @include('public.partials.blocks', ['blocks' => [$introBlocks->first()]])

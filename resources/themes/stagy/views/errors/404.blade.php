@@ -10,7 +10,7 @@
     $highlight = '<span class="text-public-accent">'.e(__('theme::site.not_found.highlight')).'</span>';
 @endphp
 
-<x-public.layout :settings="$settings" :menu="$menu" :meta-title="__('theme::site.not_found.meta_title')" :meta-description="__('theme::site.not_found.meta_description')">
+<x-public.layout :settings="$settings" :menu="$menu" :meta-title="__('theme::site.not_found.meta_title')" :meta-description="__('theme::site.not_found.meta_description')" :noindex="true">
     <x-public.container as="section" class="flex flex-wrap items-center gap-14 pt-20 pb-24">
         <div class="flex min-w-0 flex-[1_1_27.5rem] flex-col gap-6">
             <x-public.badge tone="mint" class="self-start">{{ __('theme::site.not_found.eyebrow') }}</x-public.badge>

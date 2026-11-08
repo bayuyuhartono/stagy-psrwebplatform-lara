@@ -42,3 +42,14 @@ test('audit log viewers can open the redacted activity listing', function () {
 test('audit log screen requires permission', function () {
     $this->actingAs(actingAsCmsSeoAuditUser(['seo.view']))->get('/cms/audit-logs')->assertForbidden();
 });
+
+test('the SEO manager only offers content modules that are switched on', function () {
+    FeatureFlag::factory()->create(['name' => 'pages', 'enabled' => true]);
+    FeatureFlag::factory()->create(['name' => 'services', 'enabled' => false]);
+
+    $this->actingAs(actingAsCmsSeoAuditUser(['seo.view', 'pages.view', 'services.view']))
+        ->get('/cms/seo')
+        ->assertSuccessful()
+        ->assertSee('<option value="pages">', escape: false)
+        ->assertDontSee('<option value="services">', escape: false);
+});

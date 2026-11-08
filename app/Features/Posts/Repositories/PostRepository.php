@@ -15,7 +15,7 @@ class PostRepository
     /** @param array<string, mixed> $filters */
     public function paginateForAdmin(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->filteredQuery($filters)->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage'])->latest()->paginate($perPage);
+        return $this->filteredQuery($filters)->with(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage', 'seo'])->latest()->paginate($perPage);
     }
 
     /** @param array<string, mixed> $filters */

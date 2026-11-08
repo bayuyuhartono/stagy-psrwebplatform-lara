@@ -2,6 +2,7 @@
 
 namespace App\Features\Search\Repositories;
 
+use App\Features\Settings\Repositories\FeatureFlagRepository;
 use App\Models\ContactMessage;
 use App\Models\Media;
 use App\Models\Page;
@@ -15,18 +16,22 @@ use Illuminate\Support\Collection;
 
 class SearchRepository
 {
+    public function __construct(private FeatureFlagRepository $featureFlags) {}
+
     /** @return Collection<int, array<string, mixed>> */
     public function search(string $term, int $limit, Collection $permissions): Collection
     {
         return collect([
-            'pages' => [Page::class, ['title', 'slug'], 'pages.view'],
-            'posts' => [Post::class, ['title', 'slug'], 'posts.view'],
-            'services' => [Service::class, ['title', 'slug'], 'services.view'],
-            'portfolio' => [Portfolio::class, ['title', 'slug'], 'portfolio.view'],
-            'media' => [Media::class, ['original_name', 'alt_text'], 'media.view'],
-            'contact_messages' => [ContactMessage::class, ['subject', 'name'], 'contact-messages.view'],
-            'users' => [User::class, ['name', 'email'], 'users.view'],
-        ])->filter(fn (array $definition): bool => $permissions->contains($definition[2]))
+            'pages' => [Page::class, ['title', 'slug'], 'pages.view', 'pages'],
+            'posts' => [Post::class, ['title', 'slug'], 'posts.view', 'posts'],
+            'services' => [Service::class, ['title', 'slug'], 'services.view', 'services'],
+            'portfolio' => [Portfolio::class, ['title', 'slug'], 'portfolio.view', 'portfolio'],
+            'media' => [Media::class, ['original_name', 'alt_text'], 'media.view', 'media'],
+            'contact_messages' => [ContactMessage::class, ['subject', 'name'], 'contact-messages.view', 'contact-messages'],
+            'users' => [User::class, ['name', 'email'], 'users.view', null],
+        ])
+            // Results from a switched-off module would link to CMS screens that 404.
+            ->filter(fn (array $definition): bool => $permissions->contains($definition[2]) && ($definition[3] === null || $this->featureFlags->isEnabled($definition[3])))
             ->flatMap(fn (array $definition, string $type): Collection => $this->searchType($type, $definition[0], $definition[1], $term, $limit))
             ->sortByDesc('updated_at')
             ->take($limit)

@@ -13,7 +13,7 @@ class PageRepository
     public function paginateForAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return Page::query()
-            ->with('author:id,name')
+            ->with(['author:id,name', 'seo'])
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['locale'] ?? null, fn ($query, string $locale) => $query->forLocale($locale))
             ->when($filters['search'] ?? null, fn ($query, string $search) => $query->whereAny(['title', 'slug'], 'like', "%{$search}%"))

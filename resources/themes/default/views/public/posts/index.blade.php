@@ -5,7 +5,8 @@
     :menu="$menu"
     :meta-title="$archiveLabel ? $archiveLabel.' — '.($type->value === 'blog' ? 'Insights' : 'News') : ($type->value === 'blog' ? 'Insights — Pesoros' : 'News — Pesoros')"
     :meta-description="$archiveLabel ? 'Posts filed under '.$archive['term']->name.'.' : ($type->value === 'blog' ? 'Ideas and practical perspectives from the Pesoros team.' : 'Latest announcements and updates from Pesoros.')"
-    :canonical="$archive ? localized_route('website.'.$type->value.'.'.$archive['taxonomy'], $archive['term']->slug) : localized_route('website.'.$type->value.'.index')">
+    :canonical="($archive ? localized_route('website.'.$type->value.'.'.$archive['taxonomy'], $archive['term']->slug) : localized_route('website.'.$type->value.'.index')).($posts->currentPage() > 1 ? '?page='.$posts->currentPage() : '')"
+    :noindex="$posts->isEmpty()">
     <section class="relative overflow-hidden bg-public-ink pb-24 pt-40 text-white lg:pb-32 lg:pt-52">
         <div class="absolute -right-24 top-24 size-[30rem] rounded-full border border-white/10"></div>
         <div class="absolute right-20 top-48 size-36 rounded-full bg-public-accent sm:right-40 sm:size-52"></div>

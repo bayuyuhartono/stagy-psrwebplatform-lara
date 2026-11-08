@@ -5,6 +5,7 @@ use App\Models\Media;
 use App\Models\Page;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Seo;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -101,4 +102,14 @@ test('SEO administration routes are hidden when disabled', function () {
     $page = Page::factory()->create();
 
     $this->getJson("/api/v1/admin/pages/{$page->id}/seo")->assertNotFound();
+});
+
+test('the admin page list carries each page SEO score for the SEO manager', function () {
+    actingAsSeoAdministrator(['pages.view']);
+    $page = Page::factory()->create();
+    Seo::factory()->for($page, 'seoable')->create(['score' => 65]);
+
+    $this->getJson('/api/v1/admin/pages')
+        ->assertSuccessful()
+        ->assertJsonPath('data.0.seo.score', 65);
 });

@@ -10,6 +10,7 @@ use App\Features\Pricing\Services\PricingCatalog;
 use App\Features\Themes\Services\ThemeManager;
 use App\Features\Themes\Services\ThemeSettings;
 use App\Features\WebsiteSettings\Services\WhatsAppLink;
+use App\Models\FeatureFlag;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Portfolio;
@@ -62,6 +63,8 @@ class AppServiceProvider extends ServiceProvider
         Service::observe(SitemapCacheObserver::class);
         Portfolio::observe(SitemapCacheObserver::class);
         Seo::observe(SitemapCacheObserver::class);
+        // Switching a module on or off adds or removes its URLs.
+        FeatureFlag::observe(SitemapCacheObserver::class);
 
         Validator::extend('content_link', fn (string $attribute, mixed $value): bool => is_string($value) && ContentLink::isValid($value), 'The :attribute must be a URL, a path starting with "/", an "#anchor", a mailto:/tel: link, or "whatsapp".');
 
@@ -125,6 +128,8 @@ class AppServiceProvider extends ServiceProvider
             'languageSwitcher' => $this->app->make(AlternateUrlResolver::class)->switcher($alternates),
             'integrations' => app(PublicIntegrationResolver::class)->enabledConfigs(),
             'defaultSocialImageUrl' => $layoutMedia->get($settings->get('seo', [])['social_image_id'] ?? '')?->url,
+            // The content's own cover, the share image when its SEO names none. Only read when already eager-loaded.
+            'contentImage' => $content instanceof Model && $content->relationLoaded('coverImage') ? $content->getRelation('coverImage') : null,
             // Uploaded branding; themes fall back to their own bundled logo and favicon when these are null.
             'brandLogoUrl' => $layoutMedia->get($branding['logo_id'] ?? '')?->url,
             'brandFaviconUrl' => $layoutMedia->get($branding['favicon_id'] ?? '')?->url,

@@ -25,7 +25,9 @@ function actingAsSearchAdministrator(array $permissions): User
 }
 
 beforeEach(function () {
-    FeatureFlag::factory()->create(['name' => 'global-search', 'enabled' => true]);
+    foreach (['global-search', 'pages', 'posts'] as $feature) {
+        FeatureFlag::factory()->create(['name' => $feature, 'enabled' => true]);
+    }
 });
 
 test('global search returns matching records from permitted modules', function () {
@@ -49,6 +51,17 @@ test('global search never returns records from modules the user cannot view', fu
     Post::factory()->create(['title' => 'Restricted Match']);
 
     $response = $this->getJson('/api/v1/admin/search?q=Restricted')->assertSuccessful();
+
+    expect(collect($response->json('data.results'))->pluck('type')->unique()->all())->toBe(['pages']);
+});
+
+test('global search leaves out modules switched off for the project', function () {
+    actingAsSearchAdministrator(['global-search.view', 'pages.view', 'posts.view']);
+    FeatureFlag::query()->where('name', 'posts')->update(['enabled' => false]);
+    Page::factory()->create(['title' => 'Switched Match']);
+    Post::factory()->create(['title' => 'Switched Match']);
+
+    $response = $this->getJson('/api/v1/admin/search?q=Switched')->assertSuccessful();
 
     expect(collect($response->json('data.results'))->pluck('type')->unique()->all())->toBe(['pages']);
 });

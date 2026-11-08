@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Cache;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
-    FeatureFlag::factory()->create(['name' => 'seo', 'enabled' => true]);
+    foreach (['seo', 'pages', 'posts', 'services', 'portfolio'] as $feature) {
+        FeatureFlag::factory()->create(['name' => $feature, 'enabled' => true]);
+    }
     Cache::forget(SitemapService::CACHE_KEY);
 });
 
@@ -35,7 +37,7 @@ test('sitemap contains only currently published indexable content', function () 
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8');
 
     expect($response->getContent())
-        ->toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+        ->toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">')
         ->toContain('<loc>'.url('/about').'</loc>')
         ->toContain('<loc>'.url('/blog/first-post').'</loc>')
         ->toContain('<loc>'.url('/news/company-news').'</loc>')
@@ -84,8 +86,6 @@ test('content and SEO observers invalidate the sitemap cache', function () {
 });
 
 test('public content responses include generated and custom canonical URLs', function () {
-    FeatureFlag::factory()->create(['name' => 'pages', 'enabled' => true]);
-    FeatureFlag::factory()->create(['name' => 'posts', 'enabled' => true]);
     Page::factory()->published()->create(['slug' => 'about-us']);
     $post = Post::factory()->published()->create(['slug' => 'canonical-post']);
     Seo::factory()->create([
@@ -106,4 +106,23 @@ test('sitemap respects the SEO feature flag', function () {
     FeatureFlag::query()->where('name', 'seo')->update(['enabled' => false]);
 
     $this->get('/sitemap.xml')->assertNotFound();
+});
+
+test('sitemap leaves out modules switched off for the project', function () {
+    FeatureFlag::query()->where('name', 'services')->update(['enabled' => false]);
+    Service::factory()->published()->create(['slug' => 'hidden-service']);
+    Page::factory()->published()->create(['slug' => 'about']);
+
+    $this->get('/sitemap.xml')
+        ->assertSuccessful()
+        ->assertSee('<loc>'.url('/about').'</loc>', escape: false)
+        ->assertDontSee('hidden-service');
+});
+
+test('switching a module on or off refreshes the cached sitemap', function () {
+    Cache::put(SitemapService::CACHE_KEY, 'stale');
+
+    FeatureFlag::query()->where('name', 'services')->first()->update(['enabled' => false]);
+
+    expect(Cache::has(SitemapService::CACHE_KEY))->toBeFalse();
 });

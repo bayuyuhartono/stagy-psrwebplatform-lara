@@ -36,3 +36,11 @@ test('menu manager respects its feature flag', function () {
     FeatureFlag::query()->where('name', 'menus')->update(['enabled' => false]);
     $this->actingAs(actingAsCmsMenuUser(['menus.view']))->get('/cms/menus')->assertNotFound();
 });
+
+test('menu locations are chosen from the locations the active theme renders', function () {
+    config(['themes.active' => 'stagy']);
+
+    $this->actingAs(actingAsCmsMenuUser(['menus.view']))->get('/cms/menus')
+        ->assertSuccessful()
+        ->assertSeeInOrder(['<option value="header">Header</option>', '<option value="footer-product">Footer · Product</option>', '<option value="footer-help">Footer · Help</option>'], escape: false);
+});

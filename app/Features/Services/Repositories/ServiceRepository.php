@@ -12,7 +12,7 @@ class ServiceRepository
     /** @param array<string, mixed> $filters */
     public function paginateForAdmin(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->filtered($filters)->with('author:id,name')->orderBy('position')->latest()->paginate($perPage);
+        return $this->filtered($filters)->with(['author:id,name', 'seo'])->orderBy('position')->latest()->paginate($perPage);
     }
 
     /** @param array<string, mixed> $filters */

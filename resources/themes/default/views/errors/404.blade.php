@@ -6,7 +6,7 @@
     $menu = $menus->findActiveByLocationOrNull('header');
 @endphp
 
-<x-public.layout :settings="$settings" :menu="$menu" metaTitle="404 — Page Not Found" metaDescription="The page you are looking for could not be found.">
+<x-public.layout :settings="$settings" :menu="$menu" metaTitle="404 — Page Not Found" metaDescription="The page you are looking for could not be found." :noindex="true">
     <section class="relative flex min-h-[70vh] items-center justify-center overflow-hidden bg-public-ink text-white lg:min-h-screen">
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--color-public-surface),transparent_70%)] opacity-30"></div>
         <div class="relative z-10 mx-auto max-w-3xl px-5 text-center sm:px-8 lg:px-10">

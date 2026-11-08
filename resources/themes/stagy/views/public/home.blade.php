@@ -1,5 +1,5 @@
 {{-- The home page is the CMS page with the "home" slug in the current language. --}}
-<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="localized_route('home')">
+<x-public.layout :page="$page" :settings="$settings" :menu="$menu" :canonical="localized_route('home')" :noindex="$page === null">
     @if ($page !== null)
         @include('public.partials.blocks', ['blocks' => $page->blocks ?? []])
     @else

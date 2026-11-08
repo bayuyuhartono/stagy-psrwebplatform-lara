@@ -331,23 +331,47 @@ if (postsList) {
         if (locale.value) params.set('locale', locale.value);
         apiRequest(`/api/v1/admin/posts?${params}`).then((payload) => {
             rows.replaceChildren();
+            const dateFormat = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            const element = (tag, className, text) => { const node = document.createElement(tag); node.className = className; if (text !== undefined) node.textContent = text; return node; };
             payload.data.forEach((post) => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-cms-canvas/45';
-                const content = document.createElement('td');
-                content.className = 'px-5 py-4';
-                const title = document.createElement('p'); title.className = 'font-semibold text-cms-navy'; title.textContent = post.title;
-                const excerpt = document.createElement('p'); excerpt.className = 'mt-1 flex max-w-xl items-center gap-2 truncate text-xs text-cms-navy/40'; excerpt.append(localeBadge(post.locale), post.excerpt || `/${post.slug}`);
-                content.append(title, excerpt);
-                const typeCell = document.createElement('td'); typeCell.className = 'px-5 py-4 text-sm capitalize text-cms-navy/60'; typeCell.textContent = post.type;
-                const statusCell = document.createElement('td'); statusCell.className = 'px-5 py-4';
-                const badge = document.createElement('span'); badge.className = post.status === 'published' ? 'rounded-full bg-cms-green/10 px-2.5 py-1 text-xs font-bold text-cms-green' : 'rounded-full bg-cms-gold/15 px-2.5 py-1 text-xs font-bold text-cms-navy'; badge.textContent = post.status; statusCell.append(badge);
-                const action = document.createElement('td'); action.className = 'px-5 py-4 text-right';
-                if (canUpdate) { const edit = document.createElement('a'); edit.href = `/cms/posts/${post.id}/edit`; edit.className = 'inline-flex h-9 items-center rounded-lg border border-cms-navy/10 bg-white px-3 text-xs font-bold'; edit.textContent = 'Edit'; action.append(edit); }
-                else { action.textContent = 'View only'; action.classList.add('text-xs', 'text-cms-navy/35'); }
-                row.append(content, typeCell, statusCell, action); rows.append(row);
+                const row = element('li', 'flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4 hover:bg-cms-canvas/45 sm:flex-nowrap sm:px-5');
+                const thumb = element('span', 'grid aspect-video w-24 shrink-0 place-items-center overflow-hidden rounded-lg bg-cms-canvas text-[0.65rem] font-semibold text-cms-navy/30 sm:w-28');
+                if (post.cover_image?.url) thumb.append(mediaVisual(post.cover_image)); else thumb.textContent = 'No cover';
+                const copy = element('div', 'min-w-0 flex-1 basis-48');
+                const title = element('a', 'line-clamp-2 font-semibold text-cms-navy hover:underline', post.title);
+                title.href = canUpdate ? `/cms/posts/${post.id}/edit` : (post.canonical_url ?? '#');
+                const meta = element('p', 'mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-cms-navy/45');
+                const parts = [post.type === 'news' ? 'News' : 'Blog'];
+                if (post.categories?.length) parts.push(post.categories.map((category) => category.name).join(', '));
+                if (post.status === 'published' && post.published_at) {
+                    const publishedAt = new Date(post.published_at);
+                    parts.push(publishedAt > new Date() ? `Scheduled ${dateFormat.format(publishedAt)}` : dateFormat.format(publishedAt));
+                } else if (post.updated_at) parts.push(`Edited ${dateFormat.format(new Date(post.updated_at))}`);
+                if (post.reading_time_minutes) parts.push(`${post.reading_time_minutes} min read`);
+                meta.append(localeBadge(post.locale), parts.join(' · '));
+                if (post.is_featured) meta.append(element('span', 'rounded-full bg-cms-gold/20 px-2 py-0.5 text-[0.65rem] font-bold text-cms-navy', '★ Featured'));
+                copy.append(title, meta);
+                const side = element('div', 'flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end');
+                const isScheduled = post.status === 'published' && post.published_at && new Date(post.published_at) > new Date();
+                const badge = element('span', post.status === 'published' && !isScheduled
+                    ? 'rounded-full bg-cms-green/10 px-2.5 py-1 text-xs font-bold text-cms-green'
+                    : 'rounded-full bg-cms-gold/15 px-2.5 py-1 text-xs font-bold text-cms-navy', isScheduled ? 'Scheduled' : (post.status === 'published' ? 'Published' : 'Draft'));
+                const actions = element('div', 'flex gap-2');
+                if (post.status === 'published' && !isScheduled && post.canonical_url) {
+                    const view = element('a', 'inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-bold text-cms-navy/55 hover:text-cms-navy', 'View ↗');
+                    view.href = post.canonical_url; view.target = '_blank'; view.rel = 'noopener';
+                    actions.append(view);
+                }
+                if (canUpdate) {
+                    const edit = element('a', 'inline-flex h-9 items-center rounded-lg border border-cms-navy/10 bg-white px-3 text-xs font-bold', 'Edit');
+                    edit.href = `/cms/posts/${post.id}/edit`;
+                    actions.append(edit);
+                } else actions.append(element('span', 'text-xs text-cms-navy/35', 'View only'));
+                side.append(badge, actions);
+                row.append(thumb, copy, side);
+                rows.append(row);
             });
-            if (!payload.data.length) { const row = document.createElement('tr'); const cell = document.createElement('td'); cell.colSpan = 4; cell.className = 'px-5 py-12 text-center text-sm text-cms-navy/45'; cell.textContent = 'No posts match these filters.'; row.append(cell); rows.append(row); }
+            if (!payload.data.length) rows.append(element('li', 'px-5 py-12 text-center text-sm text-cms-navy/45', 'No posts match these filters.'));
             summary.textContent = `Showing ${payload.meta.from ?? 0}–${payload.meta.to ?? 0} of ${payload.meta.total} posts`;
             previous.disabled = payload.meta.current_page <= 1; next.disabled = payload.meta.current_page >= payload.meta.last_page; error.classList.add('hidden');
         }).catch(() => { error.textContent = 'Posts could not be loaded.'; error.classList.remove('hidden'); });
@@ -1224,6 +1248,12 @@ if (menuManager) {
     const canCreate = menuManager.dataset.canCreate === 'true';
     const canUpdate = menuManager.dataset.canUpdate === 'true';
     const canDelete = menuManager.dataset.canDelete === 'true';
+    const locationLabels = JSON.parse(menuManager.dataset.menuLocations || '{}');
+    const locationLabel = (location) => locationLabels[location] ?? location;
+    const ensureLocationOption = (location) => {
+        if (!location || [...menuLocation.options].some((option) => option.value === location)) return;
+        menuLocation.append(new Option(`${location} (not used by the active theme)`, location));
+    };
     let menus = [];
     let activeMenu = null;
 
@@ -1331,7 +1361,7 @@ if (menuManager) {
             name.textContent = menu.name;
             const location = document.createElement('span');
             location.className = menu.id === activeMenu?.id ? 'mt-1 block truncate text-xs text-white/55' : 'mt-1 block truncate text-xs text-cms-navy/40';
-            location.textContent = `${localeLabel(menu.locale)} · ${menu.location} · ${menu.is_active ? 'Active' : 'Inactive'}`;
+            location.textContent = `${localeLabel(menu.locale)} · ${locationLabel(menu.location)} · ${menu.is_active ? 'Active' : 'Inactive'}`;
             button.append(name, location);
             button.addEventListener('click', () => selectMenu(menu.id));
             menuList.append(button);
@@ -1355,6 +1385,7 @@ if (menuManager) {
             activeMenu = payload.data;
             menuId.value = activeMenu.id;
             menuName.value = activeMenu.name;
+            ensureLocationOption(activeMenu.location);
             menuLocation.value = activeMenu.location;
             menuLocale.value = activeMenu.locale;
             menuLocale.disabled = true;
@@ -1482,6 +1513,11 @@ if (pageEditor) {
     const postCover = pageEditor.querySelector('[data-post-cover]');
     const postCoverPreview = pageEditor.querySelector('[data-post-cover-preview]');
     const postCoverCopy = pageEditor.querySelector('[data-post-cover-copy]');
+    const postClearCover = pageEditor.querySelector('[data-post-clear-cover]');
+    const postPublishedAt = pageEditor.querySelector('[data-post-published-at]');
+    const postSlugPrefix = pageEditor.querySelector('[data-post-slug-prefix]');
+    const postExcerptCount = pageEditor.querySelector('[data-post-excerpt-count]');
+    const postView = pageEditor.querySelector('[data-post-view]');
     const serviceExcerpt = pageEditor.querySelector('[data-service-excerpt]');
     const serviceIcon = pageEditor.querySelector('[data-service-icon]');
     const servicePosition = pageEditor.querySelector('[data-service-position]');
@@ -1512,6 +1548,161 @@ if (pageEditor) {
         notice.classList.remove('hidden');
         notice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
+
+    /**
+     * Renders a hidden multi-select as a list of toggleable chips; the select stays the source of truth.
+     */
+    const renderChoiceList = (select) => {
+        let list = select.nextElementSibling?.matches('[data-choice-chips]') ? select.nextElementSibling : null;
+        if (!list) {
+            list = document.createElement('div');
+            list.dataset.choiceChips = '';
+            list.className = 'flex flex-wrap gap-2';
+            select.after(list);
+        }
+        list.replaceChildren();
+        [...select.options].forEach((option) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.setAttribute('aria-pressed', option.selected ? 'true' : 'false');
+            chip.className = option.selected
+                ? 'inline-flex h-8 items-center gap-1.5 rounded-full border border-cms-green bg-cms-green px-3 text-xs font-semibold text-white'
+                : 'inline-flex h-8 items-center gap-1.5 rounded-full border border-cms-navy/12 bg-white px-3 text-xs font-semibold text-cms-navy/70 hover:border-cms-navy/30';
+            chip.textContent = `${option.selected ? '✓ ' : ''}${option.textContent}`;
+            chip.addEventListener('click', () => { option.selected = !option.selected; renderChoiceList(select); });
+            list.append(chip);
+        });
+        if (!select.options.length) {
+            const empty = document.createElement('p');
+            empty.className = 'text-xs text-cms-navy/40';
+            empty.textContent = 'None available for this language yet.';
+            list.append(empty);
+        }
+    };
+    const refreshChoiceLists = () => pageEditor.querySelectorAll('select[data-choice-list]').forEach(renderChoiceList);
+
+    const toLocalDateTime = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        const pad = (number) => String(number).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+    const updatePostChrome = () => {
+        if (postSlugPrefix) {
+            const locale = editorLocale();
+            const localePrefix = locale === cmsLocales.default ? '' : `/${locale}`;
+            postSlugPrefix.textContent = `${localePrefix}/${postType.value === 'news' ? 'news' : 'blog'}/`;
+        }
+        if (postExcerptCount) {
+            const length = postExcerpt.value.trim().length;
+            postExcerptCount.textContent = `${length} / 160`;
+            postExcerptCount.classList.toggle('text-red-700', length > 160);
+        }
+        postClearCover?.classList.toggle('hidden', !postCover.value);
+        updatePostSeoPreview();
+    };
+
+    // Search & social panel: a quick subset of the post's SEO record, saved right after the post itself.
+    const postSeo = pageEditor.querySelector('[data-post-seo]');
+    const postSeoEditable = postSeo?.dataset.editable === 'true';
+    const postSeoTitle = postSeo?.querySelector('[data-post-seo-title]');
+    const postSeoDescription = postSeo?.querySelector('[data-post-seo-description]');
+    const postSeoKeyword = postSeo?.querySelector('[data-post-seo-keyword]');
+    const postSeoNoindex = postSeo?.querySelector('[data-post-seo-noindex]');
+    const postSeoImage = postSeo?.querySelector('[data-post-seo-image]');
+    const postSeoImagePreview = postSeo?.querySelector('[data-post-seo-image-preview]');
+    const postSeoImageCopy = postSeo?.querySelector('[data-post-seo-image-copy]');
+    const postSeoClearImage = postSeo?.querySelector('[data-post-seo-clear-image]');
+    let postSeoRecord = null;
+    let postSeoDirty = false;
+
+    const withBrand = (title) => {
+        const siteName = postSeo?.dataset.siteName || '';
+        if (!title || !siteName || title.toLowerCase().includes(siteName.toLowerCase())) return title;
+        return `${title} · ${siteName}`;
+    };
+
+    const setCount = (element, length, target) => {
+        element.textContent = `${length} / ${target}`;
+        element.classList.toggle('text-red-700', length > target);
+    };
+
+    function updatePostSeoPreview() {
+        if (!postSeo) return;
+        const title = postSeoTitle.value.trim() || withBrand(titleInput.value.trim()) || 'Post title';
+        const description = postSeoDescription.value.trim() || postExcerpt.value.trim() || 'Add an excerpt or a search description so search engines do not pick a random sentence.';
+        const host = (postSeo.dataset.siteUrl || '').replace(/^https?:\/\//, '');
+        postSeo.querySelector('[data-post-seo-preview-url]').textContent = `${host}${postSlugPrefix?.textContent ?? '/'}${slugInput.value.trim()}`;
+        postSeo.querySelector('[data-post-seo-preview-title]').textContent = title;
+        postSeo.querySelector('[data-post-seo-preview-description]').textContent = description;
+        setCount(postSeo.querySelector('[data-post-seo-title-count]'), postSeoTitle.value.trim().length, 60);
+        setCount(postSeo.querySelector('[data-post-seo-description-count]'), postSeoDescription.value.trim().length, 160);
+        postSeoClearImage.classList.toggle('hidden', !postSeoImage.value || !postSeoEditable);
+    }
+
+    const resetPostSeoImage = () => {
+        postSeoImage.value = '';
+        postSeoImageCopy.textContent = 'Uses the cover image';
+        postSeoImagePreview.replaceChildren('Cover');
+    };
+
+    const loadPostSeo = async () => {
+        const payload = await apiRequest(`/api/v1/admin/posts/${pageId}/seo`);
+        postSeoRecord = payload.data?.id ? payload.data : null;
+        postSeoTitle.value = postSeoRecord?.meta_title ?? '';
+        postSeoDescription.value = postSeoRecord?.meta_description ?? '';
+        postSeoKeyword.value = postSeoRecord?.focus_keyword ?? '';
+        postSeoNoindex.checked = postSeoRecord ? !postSeoRecord.robots?.index : false;
+        const image = postSeoRecord?.open_graph?.image;
+        if (image?.id) {
+            postSeoImage.value = image.id;
+            postSeoImageCopy.textContent = image.original_name;
+            postSeoImagePreview.replaceChildren(mediaVisual(image));
+        }
+        postSeo.querySelector('[data-post-seo-score]').textContent = postSeoRecord ? `Score ${postSeoRecord.score ?? 0}%` : 'Not set yet';
+        updatePostSeoPreview();
+    };
+
+    /** PUT replaces the whole record, so fields this panel does not show are carried over unchanged. */
+    const savePostSeo = async (postId) => {
+        if (!postSeo || !postSeoEditable || !postSeoDirty) return;
+        const payload = await apiRequest(`/api/v1/admin/posts/${postId}/seo`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                meta_title: postSeoTitle.value.trim() || null,
+                meta_description: postSeoDescription.value.trim() || null,
+                focus_keyword: postSeoKeyword.value.trim() || null,
+                canonical_url: postSeoRecord?.canonical_url ?? null,
+                robots_index: !postSeoNoindex.checked,
+                robots_follow: postSeoRecord?.robots?.follow ?? true,
+                og_title: postSeoRecord?.open_graph?.title ?? null,
+                og_description: postSeoRecord?.open_graph?.description ?? null,
+                og_image_id: postSeoImage.value || null,
+                twitter_card: postSeoRecord?.twitter_card ?? 'summary_large_image',
+                structured_data: postSeoRecord?.structured_data ?? null,
+            }),
+        });
+        postSeoRecord = payload.data;
+        postSeoDirty = false;
+        postSeo.querySelector('[data-post-seo-score]').textContent = `Score ${postSeoRecord.score ?? 0}%`;
+    };
+
+    if (postSeo) {
+        if (!postSeoEditable) postSeo.querySelectorAll('input, textarea, button').forEach((control) => { control.disabled = true; });
+        [postSeoTitle, postSeoDescription, postSeoKeyword, postSeoNoindex, postSeoImage].forEach((control) => {
+            control.addEventListener(control.type === 'checkbox' || control.type === 'hidden' ? 'change' : 'input', () => {
+                postSeoDirty = true;
+                updatePostSeoPreview();
+            });
+        });
+        [titleInput, slugInput].forEach((input) => input.addEventListener('input', updatePostSeoPreview));
+        postSeo.querySelector('[data-post-seo-choose-image]').addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: postSeoImage, preview: postSeoImagePreview, copy: postSeoImageCopy } })));
+        postSeoClearImage.addEventListener('click', () => {
+            resetPostSeoImage();
+            postSeoDirty = true;
+            updatePostSeoPreview();
+        });
+    }
 
     const field = (label, key, value = '', multiline = false, type = 'text') => {
         const wrapper = document.createElement('label');
@@ -1741,7 +1932,16 @@ if (pageEditor) {
             Object.entries(blockDefinitions[type].fields).forEach(([key, definition]) => body.append(schemaControl(key, definition, data[key])));
             return;
         }
-        if (type === 'rich_text') body.append(field('Content', 'content', data.content, true));
+        if (type === 'rich_text') {
+            const content = field('Content', 'content', data.content, true);
+            content.classList.add('sm:col-span-2');
+            content.querySelector('textarea').classList.add('min-h-72', 'leading-6');
+            const hint = document.createElement('span');
+            hint.className = 'text-xs leading-5 text-cms-navy/45';
+            hint.textContent = 'Markdown supported: ## Subheading, ### Smaller subheading, **bold**, *italic*, - list item, [link text](https://…). Subheadings help readers and search engines scan the article.';
+            content.append(hint);
+            body.append(content);
+        }
         if (type === 'hero') body.append(
             field('Heading', 'heading', data.heading),
             field('Subheading', 'subheading', data.subheading, true),
@@ -1862,6 +2062,7 @@ if (pageEditor) {
             option.selected = selectedIds.includes(category.id);
             postCategories.append(option);
         });
+        refreshChoiceLists();
     };
 
     const renderTranslations = (page) => {
@@ -1932,6 +2133,11 @@ if (pageEditor) {
                 if (postCategories) [...postCategories.options].forEach((option) => { option.selected = page.categories.some((category) => category.id === option.value); });
                 if (postTags) [...postTags.options].forEach((option) => { option.selected = page.tags.some((tag) => tag.id === option.value); });
                 if (postFeatured) postFeatured.checked = Boolean(page.is_featured);
+                if (postPublishedAt) postPublishedAt.value = toLocalDateTime(page.published_at);
+                if (postView && page.status === 'published' && page.canonical_url) {
+                    postView.href = page.canonical_url;
+                    postView.classList.replace('hidden', 'inline-flex');
+                }
                 if (postCover) postCover.value = page.cover_image?.id ?? '';
                 if (postCoverCopy) postCoverCopy.textContent = page.cover_image?.original_name ?? 'No media selected';
                 if (postCoverPreview && page.cover_image?.url) {
@@ -1979,6 +2185,8 @@ if (pageEditor) {
                 translationSource.textContent = `Translating “${source.title}” (${localeName(source.locale)}) into ${localeName(editorLocale())}. Write the URL slug in the new language.`;
                 translationSource.classList.remove('hidden');
             }
+            refreshChoiceLists();
+            if (resource === 'posts') updatePostChrome();
         } catch (error) {
             showNotice('The page editor could not be loaded. Check your permissions and feature flags.');
             saveButton.disabled = true;
@@ -1991,6 +2199,17 @@ if (pageEditor) {
     });
     slugInput.addEventListener('input', () => { slugWasEdited = true; });
     pageEditor.querySelector('[data-add-block]').addEventListener('click', () => addBlock(blockType.value));
+    if (resource === 'posts') {
+        [postType, contentLocale].forEach((input) => input?.addEventListener('change', updatePostChrome));
+        postExcerpt.addEventListener('input', updatePostChrome);
+        postCover.addEventListener('change', updatePostChrome);
+        postClearCover.addEventListener('click', () => {
+            postCover.value = '';
+            postCoverCopy.textContent = 'No media selected';
+            postCoverPreview.replaceChildren('No cover yet');
+            updatePostChrome();
+        });
+    }
     pageEditor.querySelector('[data-post-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: postCover, preview: postCoverPreview, copy: postCoverCopy } })));
     pageEditor.querySelector('[data-portfolio-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: portfolioCover, preview: portfolioCoverPreview, copy: portfolioCoverCopy } })));
     form.addEventListener('submit', async (event) => {
@@ -2016,6 +2235,7 @@ if (pageEditor) {
                 requestPayload.tag_ids = [...postTags.selectedOptions].map((option) => option.value);
                 requestPayload.is_featured = postFeatured.checked;
                 requestPayload.cover_image_id = postCover.value || null;
+                if (postPublishedAt.value) requestPayload.published_at = new Date(postPublishedAt.value).toISOString();
             }
             if (resource === 'services') {
                 requestPayload.excerpt = serviceExcerpt.value.trim() || null;
@@ -2037,8 +2257,24 @@ if (pageEditor) {
                 method: pageId ? 'PUT' : 'POST',
                 body: JSON.stringify(requestPayload),
             });
+            if (resource === 'posts') {
+                try {
+                    await savePostSeo(payload.data.id);
+                } catch (error) {
+                    const messages = Object.values(error.payload?.errors ?? {}).flat();
+                    showNotice(`The post was saved, but its search settings were not: ${messages.join(' ') || 'please try again.'}`);
+                    if (!pageId) window.setTimeout(() => window.location.assign(`/cms/${resource}/${payload.data.id}/edit`), 2500);
+                    return;
+                }
+            }
             if (!pageId) window.location.assign(`/cms/${resource}/${payload.data.id}/edit`);
-            else showNotice(`${resource === 'posts' ? 'Post' : (resource === 'services' ? 'Service' : (resource === 'portfolio' ? 'Project' : 'Page'))} saved successfully.`, 'success');
+            else if (resource === 'posts') {
+                postPublishedAt.value = toLocalDateTime(payload.data.published_at);
+                postView.href = payload.data.canonical_url ?? '#';
+                postView.classList.toggle('hidden', payload.data.status !== 'published');
+                postView.classList.toggle('inline-flex', payload.data.status === 'published');
+            }
+            if (pageId) showNotice(`${resource === 'posts' ? 'Post' : (resource === 'services' ? 'Service' : (resource === 'portfolio' ? 'Project' : 'Page'))} saved successfully.`, 'success');
         } catch (error) {
             const messages = Object.values(error.payload?.errors ?? {}).flat();
             showNotice(messages.length ? messages.join(' ') : 'The page could not be saved.');
@@ -2058,6 +2294,8 @@ if (pageEditor) {
         }
     });
     loadEditor();
+    if (postSeo && pageId) loadPostSeo().catch(() => { postSeo.querySelector('[data-post-seo-score]').textContent = 'Could not load'; });
+    else if (postSeo) updatePostSeoPreview();
 }
 
 const formatBytes = (bytes = 0) => {
@@ -2120,6 +2358,7 @@ if (mediaPicker) {
                         mediaPickerTarget.input.value = media.id;
                         mediaPickerTarget.copy.textContent = media.original_name;
                         mediaPickerTarget.preview.replaceChildren(mediaVisual(media));
+                        mediaPickerTarget.input.dispatchEvent(new Event('change'));
                         closePicker();
                     });
                     pickerGrid.append(button);
