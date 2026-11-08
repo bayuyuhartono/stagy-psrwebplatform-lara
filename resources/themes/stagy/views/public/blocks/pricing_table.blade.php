@@ -14,7 +14,7 @@
 
             @if (filled($pricing['groups']))
                 <div class="flex flex-col gap-3">
-                    <div class="overflow-x-auto rounded-[1.375rem] border border-public-line bg-public-paper" tabindex="0" role="region" aria-label="{{ $data['heading'] ?? __('theme::site.pricing.feature') }}">
+                    <div class="relative overflow-x-auto rounded-[1.375rem] border border-public-line bg-public-paper" tabindex="0" role="region" aria-label="{{ $data['heading'] ?? __('theme::site.pricing.feature') }}">
                         <table class="w-full min-w-180 border-collapse text-left text-sm">
                             <thead>
                                 <tr class="border-b border-public-line">

@@ -50,3 +50,14 @@ test('the sidebar hides modules switched off for the project', function () {
         ->assertDontSee('data-nav-section="services"', escape: false)
         ->assertDontSee('data-nav-section="portfolio"', escape: false);
 });
+
+test('the dashboard only counts modules switched on for the project', function () {
+    FeatureFlag::factory()->create(['name' => 'posts', 'enabled' => true]);
+    FeatureFlag::factory()->create(['name' => 'portfolio', 'enabled' => false]);
+
+    $this->actingAs(User::factory()->create())
+        ->get('/cms')
+        ->assertSuccessful()
+        ->assertSee('data-metric="posts"', escape: false)
+        ->assertDontSee('data-metric="portfolio"', escape: false);
+});

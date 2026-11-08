@@ -1,24 +1,26 @@
 <x-cms.app-layout title="Dashboard">
+    @inject('featureFlags', 'App\Features\Settings\Repositories\FeatureFlagRepository')
     <section data-dashboard class="grid gap-6">
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
                 <p class="text-sm text-cms-navy/55">Good {{ now()->hour < 12 ? 'morning' : (now()->hour < 18 ? 'afternoon' : 'evening') }}, {{ str(auth()->user()->name)->before(' ') }}.</p>
                 <h2 class="mt-1 text-2xl font-bold tracking-tight text-cms-navy">Here’s what’s happening today.</h2>
             </div>
-            <a href="#pages" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cms-gold px-5 text-sm font-bold text-cms-navy hover:bg-cms-gold/85">
+            <a href="{{ route('cms.pages.create') }}" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-cms-gold px-5 text-sm font-bold text-cms-navy hover:bg-cms-gold/85">
                 <span class="text-lg leading-none">+</span> New page
             </a>
         </div>
 
         <div data-dashboard-error class="hidden rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"></div>
 
-        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            @foreach ([
-                ['Pages', 'pages', 'bg-cms-navy', 'text-white'],
-                ['Posts', 'posts', 'bg-white/75', 'text-cms-navy'],
-                ['Portfolio', 'portfolio', 'bg-white/75', 'text-cms-navy'],
-                ['New messages', 'messages', 'bg-cms-green', 'text-white'],
-            ] as [$label, $metric, $background, $text])
+        @php($metricCards = collect([
+            ['Pages', 'pages', 'bg-cms-navy', 'text-white', 'pages'],
+            ['Posts', 'posts', 'bg-white/75', 'text-cms-navy', 'posts'],
+            ['Portfolio', 'portfolio', 'bg-white/75', 'text-cms-navy', 'portfolio'],
+            ['New messages', 'messages', 'bg-cms-green', 'text-white', 'contact-messages'],
+        ])->filter(fn (array $card): bool => $featureFlags->isEnabled($card[4])))
+        <div @class(['grid gap-4 sm:grid-cols-2', 'xl:grid-cols-4' => $metricCards->count() >= 4, 'xl:grid-cols-3' => $metricCards->count() === 3])>
+            @foreach ($metricCards as [$label, $metric, $background, $text])
                 <article class="rounded-2xl border border-cms-navy/8 {{ $background }} {{ $text }} p-5 shadow-sm">
                     <div class="flex items-start justify-between gap-4">
                         <p class="text-sm font-medium opacity-65">{{ $label }}</p>

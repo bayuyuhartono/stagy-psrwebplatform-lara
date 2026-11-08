@@ -23,8 +23,8 @@
 
         <div data-page-notice class="hidden rounded-xl border p-4 text-sm"></div>
 
-        <form id="page-editor-form" class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-            <div class="grid min-w-0 gap-6">
+        <form id="page-editor-form" class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <div class="grid min-w-0 grid-cols-1 gap-6">
                 <section class="grid gap-5 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm sm:p-6">
                     <label class="grid gap-2">
                         <span class="text-sm font-semibold text-cms-navy">Page title</span>
@@ -46,8 +46,8 @@
                             <p class="mt-1 text-xs text-cms-navy/45">Add sections and arrange them in page order.</p>
                         </div>
                         <div class="flex gap-2">
-                            <select data-block-type class="h-10 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm outline-none focus:border-cms-gold"></select>
-                            <button data-add-block type="button" class="h-10 rounded-xl bg-cms-gold px-4 text-sm font-bold text-cms-navy hover:bg-cms-gold/85">Add block</button>
+                            <select data-block-type class="h-10 min-w-0 flex-1 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm outline-none focus:border-cms-gold sm:flex-none"></select>
+                            <button data-add-block type="button" class="h-10 shrink-0 rounded-xl bg-cms-gold px-4 text-sm font-bold whitespace-nowrap text-cms-navy hover:bg-cms-gold/85">Add block</button>
                         </div>
                     </div>
                     <div data-block-list class="mt-6 grid gap-4"></div>

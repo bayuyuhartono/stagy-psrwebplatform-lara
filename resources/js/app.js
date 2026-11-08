@@ -232,10 +232,8 @@ if (pagesList) {
             const slug = document.createElement('p');
             slug.className = 'mt-1 flex items-center gap-2 text-xs text-cms-navy/40';
             slug.append(localeBadge(page.locale), `/${page.slug}`);
-            pageCell.append(title, slug);
-
             const statusCell = document.createElement('td');
-            statusCell.className = 'px-5 py-4';
+            statusCell.className = 'hidden px-5 py-4 sm:table-cell';
             const badge = document.createElement('span');
             badge.className = page.status === 'published'
                 ? 'inline-flex rounded-full bg-cms-green/10 px-2.5 py-1 text-xs font-bold text-cms-green'
@@ -243,8 +241,13 @@ if (pagesList) {
             badge.textContent = page.status;
             statusCell.append(badge);
 
+            // Narrow screens drop the status column, so the badge sits under the title instead.
+            const inlineBadge = badge.cloneNode(true);
+            inlineBadge.classList.add('mt-2', 'sm:hidden');
+            pageCell.append(title, slug, inlineBadge);
+
             const updatedCell = document.createElement('td');
-            updatedCell.className = 'px-5 py-4 text-sm text-cms-navy/50';
+            updatedCell.className = 'hidden px-5 py-4 text-sm text-cms-navy/50 sm:table-cell';
             updatedCell.textContent = new Date(page.updated_at).toLocaleDateString();
 
             const actionCell = document.createElement('td');
@@ -727,21 +730,24 @@ if (settingsManager) {
 
     const integrationFields = {
         'google-analytics': [['measurement_id', 'Measurement ID', 'G-XXXXXXXX']],
+        'google-search-console': [['verification_code', 'Verification code', 'Content of the google-site-verification meta tag']],
         'google-tag-manager': [['container_id', 'Container ID', 'GTM-XXXXXXX']],
         'meta-pixel': [['pixel_id', 'Pixel ID', 'Numeric ID']],
         'microsoft-clarity': [['project_id', 'Project ID', 'Project ID']],
         'google-maps': [['api_key', 'API key', 'Browser API key']],
         recaptcha: [['site_key', 'Site key', 'Public site key'], ['secret_key', 'Secret key', 'Leave blank to preserve']],
+        'custom-scripts': [['head_html', 'Before </head>', '<script>…</script>', 'textarea'], ['body_html', 'Before </body>', '<script>…</script>', 'textarea']],
     };
-    const integrationLabels = { 'google-analytics': 'Google Analytics 4', 'google-tag-manager': 'Google Tag Manager', 'meta-pixel': 'Meta Pixel', 'microsoft-clarity': 'Microsoft Clarity', 'google-maps': 'Google Maps', recaptcha: 'Google reCAPTCHA' };
+    const integrationLabels = { 'google-analytics': 'Google Analytics 4', 'google-tag-manager': 'Google Tag Manager', 'meta-pixel': 'Meta Pixel', 'microsoft-clarity': 'Microsoft Clarity', 'google-maps': 'Google Maps', recaptcha: 'Google reCAPTCHA', 'google-search-console': 'Google Search Console', 'custom-scripts': 'Custom scripts' };
     const renderIntegrations = (integrations) => {
         const grid = settingsManager.querySelector('[data-integrations-grid]'); if (!grid) return; grid.replaceChildren();
-        integrations.forEach((integration) => {
+        // Providers this screen has no form for yet are skipped rather than breaking the whole panel.
+        integrations.filter((integration) => integrationFields[integration.provider]).forEach((integration) => {
             const form = document.createElement('form'); form.dataset.integrationProvider = integration.provider; form.className = 'grid content-start gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm';
             const header = document.createElement('div'); header.className = 'flex items-start justify-between gap-3';
             const copy = document.createElement('div'); const title = document.createElement('h4'); title.className = 'font-bold'; title.textContent = integrationLabels[integration.provider]; const updated = document.createElement('p'); updated.className = 'mt-1 text-xs text-cms-navy/40'; updated.textContent = integration.updated_at ? `Updated ${new Date(integration.updated_at).toLocaleDateString()}` : 'Not configured'; copy.append(title, updated);
             const enabledLabel = document.createElement('label'); enabledLabel.className = 'flex items-center gap-2 text-xs font-bold'; const enabled = document.createElement('input'); enabled.type = 'checkbox'; enabled.dataset.integrationKey = 'enabled'; enabled.checked = integration.enabled; enabled.disabled = !canUpdateIntegrations; enabled.className = 'size-4 accent-cms-green'; enabledLabel.append(enabled, document.createTextNode('Enabled')); header.append(copy, enabledLabel); form.append(header);
-            integrationFields[integration.provider].forEach(([key, labelText, placeholder]) => { const label = document.createElement('label'); label.className = 'grid gap-2'; const caption = document.createElement('span'); caption.className = 'text-xs font-semibold'; caption.textContent = labelText; const input = document.createElement('input'); input.dataset.integrationKey = key; input.placeholder = key === 'secret_key' && integration.configured_secrets.includes(key) ? 'Configured — leave blank to preserve' : placeholder; input.value = key === 'secret_key' ? '' : (integration.config[key] ?? ''); input.type = key === 'secret_key' ? 'password' : 'text'; input.disabled = !canUpdateIntegrations; input.className = 'h-11 rounded-xl border bg-white px-4'; label.append(caption, input); form.append(label); });
+            integrationFields[integration.provider].forEach(([key, labelText, placeholder, kind]) => { const label = document.createElement('label'); label.className = 'grid gap-2'; const caption = document.createElement('span'); caption.className = 'text-xs font-semibold'; caption.textContent = labelText; const input = document.createElement(kind === 'textarea' ? 'textarea' : 'input'); input.dataset.integrationKey = key; input.placeholder = key === 'secret_key' && integration.configured_secrets.includes(key) ? 'Configured — leave blank to preserve' : placeholder; input.value = key === 'secret_key' ? '' : (integration.config[key] ?? ''); if (kind === 'textarea') { input.rows = 4; input.spellcheck = false; input.className = 'min-h-24 rounded-xl border bg-white px-4 py-3 font-mono text-xs'; } else { input.type = key === 'secret_key' ? 'password' : 'text'; input.className = 'h-11 min-w-0 rounded-xl border bg-white px-4'; } input.disabled = !canUpdateIntegrations; label.append(caption, input); form.append(label); });
             if (integration.configured_secrets.length) { const secret = document.createElement('p'); secret.className = 'text-xs font-semibold text-cms-green'; secret.textContent = `Encrypted secrets configured: ${integration.configured_secrets.join(', ')}`; form.append(secret); }
             if (canUpdateIntegrations) { const save = document.createElement('button'); save.className = 'h-10 justify-self-start rounded-xl bg-cms-green px-4 text-xs font-bold text-white'; save.textContent = 'Save integration'; form.append(save); }
             form.addEventListener('submit', async (event) => { event.preventDefault(); const body = {}; form.querySelectorAll('[data-integration-key]').forEach((input) => { if (input.dataset.integrationKey === 'secret_key' && !input.value) return; body[input.dataset.integrationKey] = input.type === 'checkbox' ? input.checked : (input.value.trim() || null); }); const save = form.querySelector('button'); if (save) save.disabled = true; try { await apiRequest(`/api/v1/admin/integrations/${integration.provider}`, { method: 'PUT', body: JSON.stringify(body) }); loadIntegrations(); showSettingsNotice(`${integrationLabels[integration.provider]} saved securely.`, 'success'); } catch (error) { showSettingsNotice(Object.values(error.payload?.errors ?? {}).flat().join(' ') || 'The integration could not be saved.'); } finally { if (save) save.disabled = false; } });
@@ -1305,7 +1311,7 @@ if (menuManager) {
         itemsList.replaceChildren();
         const renderLevel = (items, depth = 0, parentId = '') => items.forEach((item) => {
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-3 rounded-xl border border-cms-navy/8 bg-white p-3';
+            row.className = 'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-cms-navy/8 bg-white p-3';
             row.style.marginLeft = `${Math.min(depth, 3) * 1.25}rem`;
             const order = document.createElement('span');
             order.className = 'grid size-9 shrink-0 place-items-center rounded-lg bg-cms-canvas text-xs font-bold text-cms-navy/45';
@@ -1336,7 +1342,11 @@ if (menuManager) {
                         await selectMenu(activeMenu.id);
                     } catch { showMenuNotice('The menu item could not be deleted.'); }
                 });
-                row.append(addChild, edit, remove);
+                // On narrow screens the actions wrap onto their own line instead of being cut off.
+                const actions = document.createElement('div');
+                actions.className = 'flex w-full justify-end gap-4 border-t border-cms-navy/6 pt-2 sm:w-auto sm:border-0 sm:pt-0';
+                actions.append(addChild, edit, remove);
+                row.append(actions);
             }
             itemsList.append(row);
             renderLevel(item.children ?? [], depth + 1, item.id);

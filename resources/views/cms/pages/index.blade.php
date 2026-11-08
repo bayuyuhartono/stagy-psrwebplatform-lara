@@ -1,5 +1,5 @@
 <x-cms.app-layout title="Pages" section="pages">
-    <section data-pages-list data-can-update="{{ auth()->user()->hasPermission('pages.update') ? 'true' : 'false' }}" class="grid gap-6">
+    <section data-pages-list data-can-update="{{ auth()->user()->hasPermission('pages.update') ? 'true' : 'false' }}" class="grid grid-cols-1 gap-6">
         <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
                 <p class="text-sm text-cms-navy/55">Create and publish the core pages of your website.</p>
@@ -35,12 +35,12 @@
             <div data-pages-error class="m-4 hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"></div>
 
             <div class="overflow-x-auto">
-                <table class="w-full min-w-3xl text-left">
+                <table class="w-full text-left sm:min-w-3xl">
                     <thead class="text-[0.68rem] font-semibold tracking-[0.14em] text-cms-navy/40 uppercase">
                         <tr>
                             <th class="px-5 py-3">Page</th>
-                            <th class="px-5 py-3">Status</th>
-                            <th class="px-5 py-3">Updated</th>
+                            <th class="hidden px-5 py-3 sm:table-cell">Status</th>
+                            <th class="hidden px-5 py-3 sm:table-cell">Updated</th>
                             <th class="px-5 py-3 text-right">Action</th>
                         </tr>
                     </thead>
