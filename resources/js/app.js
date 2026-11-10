@@ -3335,3 +3335,35 @@ if (pricingManager) {
     localeSelect.addEventListener('change', () => { notice.classList.add('hidden'); loadAll(); });
     loadAll();
 }
+
+const passwordForm = document.querySelector('[data-password-form]');
+
+if (passwordForm) {
+    const notice = passwordForm.querySelector('[data-password-notice]');
+    const saveButton = passwordForm.querySelector('[data-password-save]');
+    const showPasswordNotice = (message, isError = false) => {
+        notice.textContent = message;
+        notice.className = `rounded-xl border p-4 text-sm ${isError ? 'border-red-200 bg-red-50 text-red-700' : 'border-cms-green/20 bg-cms-green/5 text-cms-green'}`;
+    };
+
+    passwordForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const payload = Object.fromEntries(new FormData(passwordForm));
+        if (payload.password !== payload.password_confirmation) {
+            showPasswordNotice('The new password and its confirmation do not match.', true);
+            return;
+        }
+
+        saveButton.disabled = true;
+        try {
+            await apiRequest('/api/v1/admin/profile/password', { method: 'PUT', body: JSON.stringify(payload) });
+            passwordForm.reset();
+            showPasswordNotice('Your password was updated.');
+        } catch (error) {
+            const messages = Object.values(error.payload?.errors ?? {}).flat();
+            showPasswordNotice(messages.length ? messages.join(' ') : 'The password could not be updated.', true);
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+}

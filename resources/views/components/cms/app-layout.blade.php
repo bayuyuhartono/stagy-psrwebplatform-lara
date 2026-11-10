@@ -58,12 +58,14 @@
                 </nav>
 
                 <div class="border-t border-white/10 p-4">
-                    <div class="flex items-center gap-3 rounded-xl bg-white/6 p-3">
-                        <span class="grid size-9 shrink-0 place-items-center rounded-full bg-cms-green text-xs font-bold">{{ str(auth()->user()->name)->substr(0, 2)->upper() }}</span>
-                        <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-semibold">{{ auth()->user()->name }}</p>
-                            <p class="truncate text-xs text-white/45">{{ auth()->user()->email }}</p>
-                        </div>
+                    <div class="flex items-center gap-3 rounded-xl p-3 {{ $section === 'profile' ? 'bg-white/12' : 'bg-white/6' }}">
+                        <a href="{{ route('cms.profile.index') }}" class="group flex min-w-0 flex-1 items-center gap-3" title="My profile & password">
+                            <span class="grid size-9 shrink-0 place-items-center rounded-full bg-cms-green text-xs font-bold">{{ str(auth()->user()->name)->substr(0, 2)->upper() }}</span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-semibold group-hover:text-cms-gold">{{ auth()->user()->name }}</p>
+                                <p class="truncate text-xs text-white/45">{{ auth()->user()->email }}</p>
+                            </div>
+                        </a>
                         <form method="POST" action="{{ route('cms.logout') }}">
                             @csrf
                             <button type="submit" class="rounded-lg p-2 text-white/45 hover:bg-white/10 hover:text-white" aria-label="Sign out">

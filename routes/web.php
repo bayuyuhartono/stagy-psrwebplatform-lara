@@ -11,6 +11,7 @@ use App\Http\Controllers\Cms\PageController as CmsPageController;
 use App\Http\Controllers\Cms\PortfolioController as CmsPortfolioController;
 use App\Http\Controllers\Cms\PostController as CmsPostController;
 use App\Http\Controllers\Cms\PricingController as CmsPricingController;
+use App\Http\Controllers\Cms\ProfileController as CmsProfileController;
 use App\Http\Controllers\Cms\SeoController as CmsSeoController;
 use App\Http\Controllers\Cms\ServiceController as CmsServiceController;
 use App\Http\Controllers\Cms\SettingsController as CmsSettingsController;
@@ -110,6 +111,7 @@ Route::middleware('auth')->prefix('cms')->name('cms.')->group(function (): void 
     Route::get('settings', CmsSettingsController::class)->name('settings.index');
     Route::get('seo', CmsSeoController::class)->middleware('feature:seo')->name('seo.index');
     Route::get('audit-logs', CmsAuditLogController::class)->name('audit-logs.index');
+    Route::get('profile', CmsProfileController::class)->name('profile.index');
     Route::post('logout', [CmsAuthController::class, 'destroy'])->name('logout');
 });
 
