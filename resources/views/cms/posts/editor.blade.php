@@ -141,7 +141,7 @@
             </div>
 
             <aside class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:overflow-x-hidden xl:pb-2">
-                <section class="grid gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
+                <section class="grid min-w-0 gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
                     <h3 class="font-bold">Publish</h3>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="grid min-w-0 gap-2">
@@ -175,12 +175,12 @@
                     </div>
                 </section>
 
-                <section class="grid gap-3 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
+                <section class="grid min-w-0 gap-3 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
                     <h3 class="font-bold">Cover image</h3>
-                    <div class="grid gap-3">
-                        <span data-post-cover-preview class="grid aspect-video w-full place-items-center overflow-hidden rounded-xl border border-dashed border-cms-navy/15 bg-cms-canvas/60 text-xs text-cms-navy/35">No cover yet</span>
+                    <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3">
+                        <span data-post-cover-preview class="grid aspect-video w-full min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] place-items-center overflow-hidden rounded-xl border border-dashed border-cms-navy/15 bg-cms-canvas/60 text-xs text-cms-navy/35">No cover yet</span>
                         <input data-post-cover type="hidden">
-                        <div class="flex items-center gap-3">
+                        <div class="flex min-w-0 items-center gap-3">
                             <span data-post-cover-copy class="min-w-0 flex-1 truncate text-xs text-cms-navy/45">No media selected</span>
                             <button data-post-clear-cover type="button" class="hidden h-9 shrink-0 rounded-lg border border-cms-navy/10 bg-white px-3 text-xs font-bold">Remove</button>
                             <button data-post-choose-cover type="button" class="h-9 shrink-0 rounded-lg bg-cms-navy px-3 text-xs font-bold text-white">Choose</button>
@@ -189,7 +189,7 @@
                     <p class="text-xs leading-5 text-cms-navy/45">Shown on the article, in listings and when shared. 16:9 works best.</p>
                 </section>
 
-                <section class="grid gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
+                <section class="grid min-w-0 gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
                     <h3 class="font-bold">Categories & tags</h3>
                     <div class="grid gap-2">
                         <span class="text-xs font-semibold text-cms-navy/60">Categories</span>
