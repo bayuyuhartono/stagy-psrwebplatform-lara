@@ -124,11 +124,11 @@
                         </div>
 
                         <label class="grid gap-2">
-                            <span class="flex items-baseline justify-between gap-3 text-xs font-semibold text-cms-navy/60">Search title <span data-post-seo-title-count class="font-normal text-cms-navy/40">0 / 60</span></span>
+                            <span class="flex items-baseline justify-between gap-3 text-xs font-semibold text-cms-navy/60">Meta title <span data-post-seo-title-count class="font-normal text-cms-navy/40">0 / 60</span></span>
                             <input data-post-seo-title maxlength="70" placeholder="Uses the post title" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm outline-none focus:border-cms-gold disabled:bg-cms-canvas/65">
                         </label>
                         <label class="grid gap-2">
-                            <span class="flex items-baseline justify-between gap-3 text-xs font-semibold text-cms-navy/60">Search description <span data-post-seo-description-count class="font-normal text-cms-navy/40">0 / 160</span></span>
+                            <span class="flex items-baseline justify-between gap-3 text-xs font-semibold text-cms-navy/60">Meta description <span data-post-seo-description-count class="font-normal text-cms-navy/40">0 / 160</span></span>
                             <textarea data-post-seo-description maxlength="170" rows="3" placeholder="Uses the excerpt" class="rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-sm outline-none focus:border-cms-gold disabled:bg-cms-canvas/65"></textarea>
                         </label>
                         <label class="grid gap-2">
