@@ -28,6 +28,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen bg-public-paper font-sans text-public-ink antialiased selection:bg-public-accent selection:text-public-ink">
+        @include('public.partials.preview-banner')
         @include('public.partials.integrations-body', ['integrations' => $integrations])
         @if (($theme['show_announcement_bar'] ?? true) && ($experience['announcement_enabled'] ?? false) && filled($experience['announcement'] ?? null))
             <div class="bg-public-accent px-5 py-2.5 text-center text-xs font-bold text-public-ink">{{ $experience['announcement'] }}</div>

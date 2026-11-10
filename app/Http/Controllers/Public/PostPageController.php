@@ -10,7 +10,11 @@ use App\Features\Posts\Repositories\PostRepository;
 use App\Features\Taxonomies\Repositories\TaxonomyRepository;
 use App\Features\WebsiteSettings\Services\PublicWebsiteSettings;
 use App\Http\Controllers\Controller;
+use App\Models\Post;
 use App\Models\Tag;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class PostPageController extends Controller
@@ -91,6 +95,28 @@ class PostPageController extends Controller
             'featured' => null,
             'archive' => ['taxonomy' => $taxonomy, 'term' => $term],
         ]);
+    }
+
+    /**
+     * The saved post exactly as visitors would see it, whatever its status, for
+     * CMS users who may edit it. Served from the CMS (cms.posts.preview), never indexed.
+     */
+    public function preview(Post $post, PostRepository $posts): Response
+    {
+        Gate::authorize('update', $post);
+        App::setLocale($post->locale);
+        $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'seo.ogImage', 'coverImage']);
+        // Shared so the theme layout (a component, which does not see view data) can show the preview banner.
+        view()->share(['previewing' => true, 'previewEditUrl' => route('cms.posts.edit', $post)]);
+
+        return response()
+            ->view('public.posts.show', [
+                ...$this->layoutData(),
+                'post' => $post,
+                'type' => $post->type,
+                'related' => $posts->relatedTo($post),
+            ])
+            ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     private function show(PostRepository $posts, PostType $type, string $slug): View

@@ -15,6 +15,7 @@ class SeoService
     public function __construct(
         private SeoRepository $seo,
         private SeoScoreCalculator $scoreCalculator,
+        private PostSeoScorer $postScorer,
         private AuditLogger $auditLogger,
     ) {}
 
@@ -29,7 +30,10 @@ class SeoService
     {
         $existingSeo = $this->seo->forContent($content);
         $oldValues = $existingSeo?->getAttributes() ?? [];
-        $attributes['score'] = $this->scoreCalculator->calculate($attributes);
+        // Posts are scored on their content too; other content types on their SEO fields alone.
+        $attributes['score'] = $content instanceof Post
+            ? $this->postScorer->score($content, $attributes)
+            : $this->scoreCalculator->calculate($attributes);
         $updatedSeo = $this->seo->updateOrCreateForContent($content, $attributes);
         $this->auditLogger->record('seo.updated', $updatedSeo, $oldValues, $updatedSeo->getAttributes());
 

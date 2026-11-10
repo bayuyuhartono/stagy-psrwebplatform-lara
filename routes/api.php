@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\Admin\PermissionController;
 use App\Http\Controllers\Api\V1\Admin\PortfolioController as AdminPortfolioController;
 use App\Http\Controllers\Api\V1\Admin\PortfolioSeoController;
 use App\Http\Controllers\Api\V1\Admin\PostController as AdminPostController;
+use App\Http\Controllers\Api\V1\Admin\PostSeoAnalysisController;
 use App\Http\Controllers\Api\V1\Admin\PostSeoController;
 use App\Http\Controllers\Api\V1\Admin\PricingAddonController;
 use App\Http\Controllers\Api\V1\Admin\PricingComparisonRowController;
@@ -123,6 +124,7 @@ Route::prefix('v1')->group(function (): void {
             Route::delete('menus/{menu}/items/{menu_item}', [MenuItemController::class, 'destroy'])->middleware('feature:menus')->scopeBindings();
             Route::apiResource('menus', AdminMenuController::class)->middleware('feature:menus');
             Route::post('posts/{post}/restore', [AdminPostController::class, 'restore'])->middleware('feature:posts')->withTrashed();
+            Route::post('posts/seo-analysis', PostSeoAnalysisController::class)->middleware(['feature:posts', 'feature:seo']);
             Route::apiResource('posts', AdminPostController::class)->middleware('feature:posts');
             Route::get('posts/{post}/seo', [PostSeoController::class, 'show'])->middleware(['feature:posts', 'feature:seo']);
             Route::put('posts/{post}/seo', [PostSeoController::class, 'update'])->middleware(['feature:posts', 'feature:seo']);

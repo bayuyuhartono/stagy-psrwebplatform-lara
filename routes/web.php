@@ -86,6 +86,7 @@ Route::middleware('auth')->prefix('cms')->name('cms.')->group(function (): void 
         Route::get('posts', [CmsPostController::class, 'index'])->name('posts.index');
         Route::get('posts/create', [CmsPostController::class, 'create'])->name('posts.create');
         Route::get('posts/{post}/edit', [CmsPostController::class, 'edit'])->name('posts.edit');
+        Route::get('posts/{post}/preview', [PostPageController::class, 'preview'])->name('posts.preview');
     });
     Route::middleware('feature:services')->group(function (): void {
         Route::get('services', [CmsServiceController::class, 'index'])->name('services.index');

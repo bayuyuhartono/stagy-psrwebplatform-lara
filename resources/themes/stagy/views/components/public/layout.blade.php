@@ -38,6 +38,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/themes/stagy/stagy.css', 'resources/themes/stagy/stagy.js'])
     </head>
     <body class="min-h-screen bg-public-paper font-public text-[0.9375rem] leading-[1.75] tracking-[0.01em] text-public-ink antialiased selection:bg-public-accent selection:text-white">
+        @include('public.partials.preview-banner')
         <a href="#content" class="sr-only z-50 rounded-lg bg-public-ink px-4 py-3 text-sm text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">{{ __('theme::site.skip_to_content') }}</a>
         @include('public.partials.integrations-body', ['integrations' => $integrations])
 

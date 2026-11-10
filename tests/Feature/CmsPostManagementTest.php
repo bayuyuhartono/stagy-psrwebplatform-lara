@@ -41,7 +41,7 @@ test('post creators can open the shared content block editor', function () {
     $this->actingAs($user)->get('/cms/posts/create')
         ->assertSuccessful()
         ->assertSee('Create a new post')
-        ->assertSee('Content blocks')
+        ->assertSee('Add block')
         ->assertSee('Categories');
 });
 

@@ -1511,7 +1511,13 @@ if (pageEditor) {
     const blockList = pageEditor.querySelector('[data-block-list]');
     const blockEmpty = pageEditor.querySelector('[data-block-empty]');
     const notice = pageEditor.querySelector('[data-page-notice]');
-    const saveButton = pageEditor.querySelector('[data-save-page]');
+    // The post editor has a Save button in the header and one in the sticky Publish panel.
+    const saveButtons = [...pageEditor.querySelectorAll('[data-save-page]')];
+    const saveButton = saveButtons[0];
+    const setSaving = (saving) => saveButtons.forEach((button) => {
+        button.disabled = saving;
+        button.textContent = saving ? 'Saving…' : saveLabel;
+    });
     const pageId = pageEditor.dataset.pageId;
     const resource = pageEditor.dataset.resource || 'pages';
     const saveLabel = saveButton.textContent;
@@ -1549,6 +1555,34 @@ if (pageEditor) {
     const translationOf = !pageId && contentLocale ? editorQuery.get('translation_of') : null;
     let slugWasEdited = Boolean(pageId);
     let blockDefinitions = {};
+
+    // Unsaved-changes guard: any edit after the editor has loaded marks it dirty until the next save.
+    let editorReady = false;
+    let isDirty = false;
+    const unsavedIndicator = pageEditor.querySelector('[data-unsaved-indicator]');
+    const markDirty = () => {
+        if (!editorReady || isDirty) return;
+        isDirty = true;
+        unsavedIndicator?.classList.remove('hidden');
+    };
+    const markClean = () => {
+        isDirty = false;
+        unsavedIndicator?.classList.add('hidden');
+    };
+    // Capture phase, because the media pickers fire non-bubbling change events on hidden inputs.
+    ['input', 'change'].forEach((type) => form.addEventListener(type, markDirty, true));
+    // Choice chips, block buttons (move, remove, add) and editor toolbars change content without input events.
+    pageEditor.addEventListener('click', (event) => {
+        if (event.target.closest('[data-choice-chips] button, [data-content-block] header button, [data-add-block]')) markDirty();
+    });
+    window.addEventListener('beforeunload', (event) => {
+        if (!isDirty) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+    pageEditor.querySelector('[data-editor-back]')?.addEventListener('click', (event) => {
+        if (isDirty && !window.confirm('You have unsaved changes. Leave without saving?')) event.preventDefault();
+    });
 
     const showNotice = (message, type = 'error') => {
         notice.textContent = message;
@@ -1669,7 +1703,6 @@ if (pageEditor) {
             postSeoImageCopy.textContent = image.original_name;
             postSeoImagePreview.replaceChildren(mediaVisual(image));
         }
-        postSeo.querySelector('[data-post-seo-score]').textContent = postSeoRecord ? `Score ${postSeoRecord.score ?? 0}%` : 'Not set yet';
         updatePostSeoPreview();
     };
 
@@ -1694,7 +1727,6 @@ if (pageEditor) {
         });
         postSeoRecord = payload.data;
         postSeoDirty = false;
-        postSeo.querySelector('[data-post-seo-score]').textContent = `Score ${postSeoRecord.score ?? 0}%`;
     };
 
     if (postSeo) {
@@ -2207,11 +2239,14 @@ if (pageEditor) {
                 translationSource.textContent = `Translating “${source.title}” (${localeName(source.locale)}) into ${localeName(editorLocale())}. Write the URL slug in the new language.`;
                 translationSource.classList.remove('hidden');
             }
+            // A new post starts with its body editor open: nearly every article begins with rich text.
+            if (resource === 'posts' && !pagePayload && !translationOf && !blockList.children.length && blockDefinitions.rich_text) addBlock('rich_text');
             refreshChoiceLists();
             if (resource === 'posts') updatePostChrome();
+            editorReady = true;
         } catch (error) {
             showNotice('The page editor could not be loaded. Check your permissions and feature flags.');
-            saveButton.disabled = true;
+            saveButtons.forEach((button) => { button.disabled = true; });
         }
     };
 
@@ -2234,10 +2269,12 @@ if (pageEditor) {
     }
     pageEditor.querySelector('[data-post-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: postCover, preview: postCoverPreview, copy: postCoverCopy } })));
     pageEditor.querySelector('[data-portfolio-choose-cover]')?.addEventListener('click', () => window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { input: portfolioCover, preview: portfolioCoverPreview, copy: portfolioCoverCopy } })));
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        saveButton.disabled = true;
-        saveButton.textContent = 'Saving…';
+    /**
+     * Save the editor. Resolves with the saved record, or null when saving failed
+     * (the notice explains why). A new record redirects to its edit page.
+     */
+    const saveEditor = async () => {
+        setSaving(true);
         notice.classList.add('hidden');
         try {
             const requestPayload = {
@@ -2285,10 +2322,12 @@ if (pageEditor) {
                 } catch (error) {
                     const messages = Object.values(error.payload?.errors ?? {}).flat();
                     showNotice(`The post was saved, but its search settings were not: ${messages.join(' ') || 'please try again.'}`);
+                    markClean();
                     if (!pageId) window.setTimeout(() => window.location.assign(`/cms/${resource}/${payload.data.id}/edit`), 2500);
-                    return;
+                    return null;
                 }
             }
+            markClean();
             if (!pageId) window.location.assign(`/cms/${resource}/${payload.data.id}/edit`);
             else if (resource === 'posts') {
                 postPublishedAt.value = toLocalDateTime(payload.data.published_at);
@@ -2297,13 +2336,36 @@ if (pageEditor) {
                 postView.classList.toggle('inline-flex', payload.data.status === 'published');
             }
             if (pageId) showNotice(`${resource === 'posts' ? 'Post' : (resource === 'services' ? 'Service' : (resource === 'portfolio' ? 'Project' : 'Page'))} saved successfully.`, 'success');
+            return payload.data;
         } catch (error) {
             const messages = Object.values(error.payload?.errors ?? {}).flat();
             showNotice(messages.length ? messages.join(' ') : 'The page could not be saved.');
+            return null;
         } finally {
-            saveButton.disabled = false;
-            saveButton.textContent = saveLabel;
+            setSaving(false);
         }
+    };
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        saveEditor();
+    });
+
+    // Preview: opens the last saved version; unsaved edits are saved first.
+    const previewButton = pageEditor.querySelector('[data-post-preview]');
+    previewButton?.addEventListener('click', async () => {
+        if (!pageId) {
+            showNotice('Save the post once before previewing it.');
+            return;
+        }
+        // Opened synchronously so the browser does not block it as a pop-up.
+        const previewWindow = window.open('', '_blank');
+        if (isDirty && !(await saveEditor())) {
+            previewWindow?.close();
+            return;
+        }
+        const url = `/cms/posts/${pageId}/preview`;
+        if (previewWindow) previewWindow.location = url;
+        else window.open(url, '_blank');
     });
 
     pageEditor.querySelector('[data-delete-page]')?.addEventListener('click', async () => {
@@ -2315,9 +2377,115 @@ if (pageEditor) {
             showNotice('The page could not be deleted.');
         }
     });
-    loadEditor();
-    if (postSeo && pageId) loadPostSeo().catch(() => { postSeo.querySelector('[data-post-seo-score]').textContent = 'Could not load'; });
-    else if (postSeo) updatePostSeoPreview();
+    // Live SEO analysis: the server applies the same rules that score the saved post
+    // (ContentSeoAnalyzer), so the editor and the SEO overview always agree.
+    const seoChecks = postSeo?.querySelector('[data-post-seo-checks]');
+    const seoScoreBadge = postSeo?.querySelector('[data-post-seo-score]');
+    const publishChecklist = pageEditor.querySelector('[data-publish-checklist]');
+    let latestAnalysis = null;
+    let analysisTimer;
+    let analysisRequest = 0;
+    const checkIcons = { good: '✓', warning: '!', bad: '✕' };
+    const checkColors = { good: 'bg-cms-green text-white', warning: 'bg-amber-400 text-cms-navy', bad: 'bg-red-600 text-white' };
+    const ratingBadges = { good: 'bg-cms-green text-white', fair: 'bg-amber-100 text-amber-900', poor: 'bg-red-100 text-red-800' };
+    const ratingStatus = { good: 'good', fair: 'warning', poor: 'bad' };
+    const checkGroups = [['search', 'Search appearance'], ['content', 'Content'], ['links', 'Links & images']];
+
+    const checkItem = (status, text) => {
+        const item = document.createElement('li');
+        item.className = 'flex items-start gap-2 leading-5';
+        const icon = document.createElement('span');
+        icon.className = `mt-0.5 grid size-4 shrink-0 place-items-center rounded-full text-[0.6rem] font-black ${checkColors[status]}`;
+        icon.textContent = checkIcons[status];
+        icon.setAttribute('aria-label', status === 'good' ? 'Done' : (status === 'warning' ? 'Could be better' : 'To do'));
+        const copy = document.createElement('span');
+        copy.className = status === 'good' ? 'text-cms-navy/55' : 'text-cms-navy';
+        copy.textContent = text;
+        item.append(icon, copy);
+        return item;
+    };
+
+    const renderPublishChecklist = () => {
+        if (!publishChecklist) return;
+        const checks = Object.fromEntries((latestAnalysis?.checks ?? []).map((check) => [check.key, check]));
+        const excerptLength = postExcerpt.value.trim().length;
+        const items = [
+            [postCover.value ? 'good' : 'bad', 'Cover image chosen'],
+            [postCategories.selectedOptions.length ? 'good' : 'warning', 'Category chosen'],
+            [checks.meta_description_length?.status ?? (excerptLength >= 120 && excerptLength <= 160 ? 'good' : 'warning'), 'Search description of 120–160 characters'],
+            ...(latestAnalysis ? [
+                [checks.subheadings.status, 'At least one subheading (H2)'],
+                [checks.image_alt.status, 'Every image has alt text'],
+                [ratingStatus[latestAnalysis.rating], `SEO score ${latestAnalysis.score}/100`],
+            ] : []),
+        ];
+        publishChecklist.replaceChildren(...items.map(([status, text]) => checkItem(status, text)));
+    };
+
+    const renderAnalysis = (analysis) => {
+        latestAnalysis = analysis;
+        seoScoreBadge.textContent = `SEO ${analysis.score}/100`;
+        seoScoreBadge.className = `rounded-full px-3 py-1 text-xs font-bold ${ratingBadges[analysis.rating]}`;
+        const order = { bad: 0, warning: 1, good: 2 };
+        seoChecks.replaceChildren(...checkGroups.map(([group, label]) => {
+            const column = document.createElement('div');
+            column.className = 'grid content-start gap-2';
+            const heading = document.createElement('h5');
+            heading.className = 'text-xs font-bold tracking-wide text-cms-navy/45 uppercase';
+            heading.textContent = label;
+            const list = document.createElement('ul');
+            list.className = 'grid gap-2 text-xs';
+            analysis.checks
+                .filter((check) => check.group === group)
+                .sort((first, second) => order[first.status] - order[second.status])
+                .forEach((check) => list.append(checkItem(check.status, check.message)));
+            column.append(heading, list);
+            return column;
+        }));
+        renderPublishChecklist();
+    };
+
+    const runAnalysis = async () => {
+        if (!postSeo) return;
+        const requestId = ++analysisRequest;
+        try {
+            const payload = await apiRequest('/api/v1/admin/posts/seo-analysis', {
+                method: 'POST',
+                body: JSON.stringify({
+                    title: titleInput.value.trim(),
+                    slug: slugInput.value.trim(),
+                    excerpt: postExcerpt.value.trim() || null,
+                    blocks: serializeBlocks(),
+                    has_cover_image: Boolean(postCover.value || postSeoImage.value),
+                    meta_title: postSeoTitle.value.trim() || null,
+                    meta_description: postSeoDescription.value.trim() || null,
+                    focus_keyword: postSeoKeyword.value.trim() || null,
+                    robots_index: !postSeoNoindex.checked,
+                }),
+            });
+            // Only the newest request may paint; an older, slower one would show stale results.
+            if (requestId === analysisRequest) renderAnalysis(payload.data);
+        } catch {
+            if (requestId === analysisRequest) seoScoreBadge.textContent = 'SEO —';
+        }
+    };
+    const scheduleAnalysis = () => {
+        renderPublishChecklist();
+        window.clearTimeout(analysisTimer);
+        analysisTimer = window.setTimeout(runAnalysis, 700);
+    };
+    if (resource === 'posts') {
+        ['input', 'change'].forEach((type) => form.addEventListener(type, scheduleAnalysis, true));
+        pageEditor.addEventListener('click', (event) => {
+            if (event.target.closest('[data-choice-chips] button, [data-content-block] header button, [data-add-block]')) scheduleAnalysis();
+        });
+    }
+
+    const editorLoaded = loadEditor();
+    const seoLoaded = postSeo && pageId
+        ? loadPostSeo().catch(() => { seoScoreBadge.textContent = 'SEO —'; })
+        : Promise.resolve(postSeo ? updatePostSeoPreview() : null);
+    if (resource === 'posts') Promise.all([editorLoaded, seoLoaded]).then(() => (postSeo ? runAnalysis() : renderPublishChecklist()));
 }
 
 const formatBytes = (bytes = 0) => {

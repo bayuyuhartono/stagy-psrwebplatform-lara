@@ -6,6 +6,7 @@ use App\Features\Audit\Services\AuditLogger;
 use App\Features\Localization\Services\TranslationLinker;
 use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Repositories\PostRepository;
+use App\Features\Seo\Services\PostSeoScorer;
 use App\Models\Post;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class PostService
         private PostRepository $posts,
         private AuditLogger $auditLogger,
         private TranslationLinker $translations,
+        private PostSeoScorer $seoScorer,
     ) {}
 
     /** @param array<string, mixed> $attributes */
@@ -46,6 +48,8 @@ class PostService
                 $post->tags()->sync($tagIds);
             }
             $this->auditLogger->record('post.updated', $post, $oldValues, $post->getAttributes());
+            // The stored SEO score reads the title, slug, excerpt and body, so it is stale after any edit.
+            $this->seoScorer->refresh($post);
 
             return $post->load(['author:id,name', 'categories:id,name,slug', 'tags:id,name,slug', 'coverImage']);
         });
