@@ -13,6 +13,12 @@ document.querySelectorAll('[data-demo-form]').forEach((form) => {
     const submit = form.querySelector('[data-demo-submit]');
     const submitLabel = submit.textContent;
     const requiresRecaptcha = Boolean(form.dataset.recaptchaSiteKey);
+    // Browsers draw an empty date input's "dd/mm/yyyy" in the text colour, so it reads as filled in.
+    // data-empty mutes it like a placeholder until a date is picked.
+    const dateInputs = form.querySelectorAll('input[type="date"]');
+    const syncEmptyDates = () => dateInputs.forEach((input) => input.toggleAttribute('data-empty', input.value === ''));
+    dateInputs.forEach((input) => ['input', 'change'].forEach((type) => input.addEventListener(type, syncEmptyDates)));
+    syncEmptyDates();
 
     const markInvalid = (fields) => {
         form.querySelectorAll('[aria-invalid]').forEach((input) => input.removeAttribute('aria-invalid'));
@@ -68,6 +74,7 @@ document.querySelectorAll('[data-demo-form]').forEach((form) => {
             });
             if (response.ok) {
                 form.reset();
+                syncEmptyDates();
                 markInvalid([]);
                 window.grecaptcha?.reset();
                 success.classList.remove('hidden');

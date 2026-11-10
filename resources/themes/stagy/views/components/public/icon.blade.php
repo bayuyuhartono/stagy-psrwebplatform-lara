@@ -45,6 +45,9 @@
         @case('arrow-left')
             <path d="M19 12H5M11 6l-6 6 6 6" />
             @break
+        @case('chevron-down')
+            <path d="m6 9 6 6 6-6" />
+            @break
         @case('arrow-right')
             <path d="M5 12h14M13 6l6 6-6 6" />
             @break

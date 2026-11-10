@@ -58,7 +58,7 @@ return [
         'privacy_policy' => 'kebijakan privasi',
         'submit' => 'Kirim permintaan demo',
         'sending' => 'Mengirim…',
-        'required_note' => '* wajib diisi',
+        'required_note' => 'wajib diisi',
         'success' => 'Terima kasih! Permintaan demo Anda sudah kami terima. Tim kami akan menghubungi Anda melalui WhatsApp pada jam kerja.',
         'error' => 'Permintaan belum terkirim. Periksa kembali isian yang ditandai, lalu coba lagi.',
         'captcha' => 'Selesaikan captcha terlebih dahulu.',

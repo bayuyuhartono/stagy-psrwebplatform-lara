@@ -58,7 +58,7 @@ return [
         'privacy_policy' => 'privacy policy',
         'submit' => 'Send demo request',
         'sending' => 'Sending…',
-        'required_note' => '* required',
+        'required_note' => 'required',
         'success' => 'Thank you! We have received your demo request. Our team will contact you on WhatsApp during business hours.',
         'error' => 'Your request was not sent. Check the highlighted fields and try again.',
         'captcha' => 'Please complete the captcha first.',

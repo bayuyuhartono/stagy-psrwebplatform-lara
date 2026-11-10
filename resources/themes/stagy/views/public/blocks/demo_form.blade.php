@@ -7,7 +7,11 @@
     $privacyUrl = $links->resolve($data['privacy_url'] ?? null);
     $recaptchaSiteKey = $recaptcha->siteKey();
     $fieldClass = 'h-12 w-full rounded-xl border-[1.5px] border-public-line bg-public-paper px-4 text-sm text-public-ink outline-none transition focus:border-public-accent aria-invalid:border-red-600';
-    $labelClass = 'flex flex-col gap-2 text-xs tracking-[0.04em] text-public-muted';
+    $selectClass = $fieldClass.' cursor-pointer appearance-none pr-11';
+    // Labels stretch to the row height and push their field down, so fields stay level when a neighbour's label wraps.
+    $labelClass = 'flex flex-col justify-between gap-2 text-xs tracking-[0.04em] text-public-muted';
+    // Horizon draws "*" as a faint raised dot, so the marker uses the system sans face.
+    $requiredMark = '<span aria-hidden="true" class="ml-0.5 font-sans text-sm leading-none font-bold text-public-accent">*</span>';
 @endphp
 
 <x-public.container as="section" class="flex flex-wrap items-start gap-14 pt-18 pb-22">
@@ -48,36 +52,42 @@
         class="flex min-w-0 flex-[1.4_1_28.75rem] flex-col gap-4.5 rounded-[1.75rem] border border-public-line bg-public-paper p-[clamp(1.25rem,4vw,2.25rem)] shadow-[0_24px_48px_rgba(30,41,86,0.06)]"
     >
         <div class="grid gap-4.5 sm:grid-cols-2">
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.name') }} *
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.name') }}{!! $requiredMark !!}</span>
                 <input name="name" type="text" required maxlength="255" autocomplete="name" placeholder="{{ __('theme::site.demo.name_placeholder') }}" class="{{ $fieldClass }}">
             </label>
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.company') }}
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.company') }}</span>
                 <input name="company" type="text" maxlength="255" autocomplete="organization" class="{{ $fieldClass }}">
             </label>
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.whatsapp') }} *
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.whatsapp') }}{!! $requiredMark !!}</span>
                 <input name="whatsapp" type="tel" required maxlength="50" autocomplete="tel" inputmode="tel" placeholder="{{ __('theme::site.demo.whatsapp_placeholder') }}" class="{{ $fieldClass }}">
             </label>
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.email') }}
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.email') }}</span>
                 <input name="email" type="email" maxlength="255" autocomplete="email" class="{{ $fieldClass }}">
             </label>
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.guest_estimate') }} *
-                <select name="guest_estimate" required class="{{ $fieldClass }}">
-                    @foreach (\App\Features\ContactMessages\Enums\GuestEstimate::cases() as $estimate)
-                        <option value="{{ $estimate->value }}">{{ $estimate->label($locale) }}</option>
-                    @endforeach
-                </select>
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.guest_estimate') }}{!! $requiredMark !!}</span>
+                <span class="relative block">
+                    <select name="guest_estimate" required class="{{ $selectClass }}">
+                        @foreach (\App\Features\ContactMessages\Enums\GuestEstimate::cases() as $estimate)
+                            <option value="{{ $estimate->value }}">{{ $estimate->label($locale) }}</option>
+                        @endforeach
+                    </select>
+                    <x-public.icon name="chevron-down" class="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-public-muted" />
+                </span>
             </label>
-            <label class="{{ $labelClass }}">{{ __('theme::site.demo.event_date') }}
-                <input name="event_date" type="date" min="{{ now()->toDateString() }}" class="{{ $fieldClass }}">
+            <label class="{{ $labelClass }}"><span>{{ __('theme::site.demo.event_date') }}</span>
+                <input name="event_date" type="date" min="{{ now()->toDateString() }}" data-empty class="{{ $fieldClass }} data-empty:text-public-muted">
             </label>
         </div>
         <label class="{{ $labelClass }}">{{ __('theme::site.demo.plan') }}
-            <select name="interested_plan" class="{{ $fieldClass }}">
-                <option value="">{{ __('theme::site.demo.plan_undecided') }}</option>
-                @foreach ($catalog->for()['plans'] as $plan)
-                    <option value="{{ $plan->name }}">{{ $plan->name }}</option>
-                @endforeach
-            </select>
+            <span class="relative block">
+                <select name="interested_plan" class="{{ $selectClass }}">
+                    <option value="">{{ __('theme::site.demo.plan_undecided') }}</option>
+                    @foreach ($catalog->for()['plans'] as $plan)
+                        <option value="{{ $plan->name }}">{{ $plan->name }}</option>
+                    @endforeach
+                </select>
+                <x-public.icon name="chevron-down" class="pointer-events-none absolute top-1/2 right-4 size-4 -translate-y-1/2 text-public-muted" />
+            </span>
         </label>
         <label class="{{ $labelClass }}">{{ __('theme::site.demo.message') }}
             <textarea name="message" rows="4" maxlength="10000" placeholder="{{ __('theme::site.demo.message_placeholder') }}" class="{{ $fieldClass }} h-auto py-3 leading-[1.6]"></textarea>
@@ -103,7 +113,7 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3">
             <button data-demo-submit type="submit" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-public-ink px-6 text-sm tracking-[0.04em] text-white transition hover:bg-public-deep disabled:opacity-60">{{ __('theme::site.demo.submit') }}</button>
-            <span class="text-xs text-public-muted">{{ __('theme::site.demo.required_note') }}</span>
+            <span class="text-xs text-public-muted">{!! $requiredMark !!} {{ __('theme::site.demo.required_note') }}</span>
         </div>
     </form>
 </x-public.container>
