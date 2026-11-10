@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Features\ContentBlocks\Concerns\NormalizesRichTextBlocks;
 use App\Features\Portfolios\Enums\PortfolioStatus;
 use Database\Factories\PortfolioFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Portfolio extends Model
 {
     /** @use HasFactory<PortfolioFactory> */
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, NormalizesRichTextBlocks, SoftDeletes;
 
     protected $attributes = ['status' => 'draft', 'is_featured' => false, 'blocks' => '[]', 'position' => 0];
 

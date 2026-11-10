@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Features\ContentBlocks\Concerns\NormalizesRichTextBlocks;
 use App\Features\Localization\Concerns\HasTranslations;
 use App\Features\Pages\Enums\PageStatus;
 use Database\Factories\PageFactory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Page extends Model
 {
     /** @use HasFactory<PageFactory> */
-    use HasFactory, HasTranslations, HasUuids, SoftDeletes;
+    use HasFactory, HasTranslations, HasUuids, NormalizesRichTextBlocks, SoftDeletes;
 
     protected $attributes = ['status' => 'draft', 'blocks' => '[]'];
 

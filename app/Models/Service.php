@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Features\ContentBlocks\Concerns\NormalizesRichTextBlocks;
 use App\Features\Services\Enums\ServiceStatus;
 use Database\Factories\ServiceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Service extends Model
 {
     /** @use HasFactory<ServiceFactory> */
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, NormalizesRichTextBlocks, SoftDeletes;
 
     protected $attributes = ['status' => 'draft', 'blocks' => '[]', 'position' => 0];
 

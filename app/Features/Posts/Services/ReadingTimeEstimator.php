@@ -14,7 +14,7 @@ class ReadingTimeEstimator
 
     public function minutes(Post $post): int
     {
-        $words = str_word_count(strip_tags($this->text($post->excerpt).' '.$this->text($post->blocks ?? [])));
+        $words = str_word_count(strip_tags(str_replace('<', ' <', $this->text($post->excerpt).' '.$this->text($post->blocks ?? []))));
 
         return max(1, (int) ceil($words / self::WORDS_PER_MINUTE));
     }

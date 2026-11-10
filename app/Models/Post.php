@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Features\ContentBlocks\Concerns\NormalizesRichTextBlocks;
 use App\Features\Localization\Concerns\HasTranslations;
 use App\Features\Posts\Enums\PostStatus;
 use App\Features\Posts\Enums\PostType;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
-    use HasFactory, HasTranslations, HasUuids, SoftDeletes;
+    use HasFactory, HasTranslations, HasUuids, NormalizesRichTextBlocks, SoftDeletes;
 
     protected $attributes = ['status' => 'draft', 'blocks' => '[]', 'is_featured' => false];
 

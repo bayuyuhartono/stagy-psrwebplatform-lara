@@ -9,7 +9,11 @@
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
         "@tiptap/core": "^3.33.0",
-        "@tiptap/markdown": "^3.33.0",
+        "@tiptap/extension-highlight": "^3.33.0",
+        "@tiptap/extension-image": "^3.33.0",
+        "@tiptap/extension-table": "^3.33.0",
+        "@tiptap/extension-text-align": "^3.33.0",
+        "@tiptap/extension-youtube": "^3.33.0",
         "@tiptap/starter-kit": "^3.33.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.1",

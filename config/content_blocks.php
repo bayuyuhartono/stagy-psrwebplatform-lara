@@ -36,7 +36,7 @@ return [
         ],
         'rules' => [
             'data' => ['required', 'array:content'],
-            'data.content' => ['required', 'string', 'max:100000'],
+            'data.content' => ['required', 'string', 'max:200000'],
         ],
     ],
 
