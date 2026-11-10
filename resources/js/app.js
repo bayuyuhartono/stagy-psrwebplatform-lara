@@ -1943,14 +1943,26 @@ if (pageEditor) {
             return;
         }
         if (type === 'rich_text') {
-            const content = field('Content', 'content', data.content, true);
-            content.classList.add('sm:col-span-2');
-            content.querySelector('textarea').classList.add('min-h-72', 'leading-6');
+            // A div, not the usual <label>: a label wrapping the editable area would steal its clicks.
+            const content = document.createElement('div');
+            content.className = 'grid gap-1.5 sm:col-span-2';
+            const caption = document.createElement('span');
+            caption.className = 'text-xs font-semibold text-cms-navy/60';
+            caption.textContent = 'Content';
+            const textarea = document.createElement('textarea');
+            textarea.dataset.field = 'content';
+            textarea.value = data.content ?? '';
+            textarea.setAttribute('aria-label', 'Content (Markdown)');
+            textarea.className = 'min-h-72 resize-y rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-sm leading-6 outline-none focus:border-cms-gold';
             const hint = document.createElement('span');
             hint.className = 'text-xs leading-5 text-cms-navy/45';
-            hint.textContent = 'Markdown supported: ## Subheading, ### Smaller subheading, **bold**, *italic*, - list item, [link text](https://…). Subheadings help readers and search engines scan the article.';
-            content.append(hint);
+            hint.textContent = 'Use H2 / H3 for subheadings: they help readers and search engines scan the article. Pasted formatting is reduced to headings, bold, italic, lists, quotes and links.';
+            content.append(caption, textarea, hint);
             body.append(content);
+            // Loaded on demand so public pages never download the editor. If it fails, the Markdown textarea still works.
+            import('./rich-text-editor.js').then(({ mountRichTextEditor }) => mountRichTextEditor(textarea)).catch(() => {
+                hint.textContent = 'Markdown supported: ## Subheading, ### Smaller subheading, **bold**, *italic*, - list item, [link text](https://…).';
+            });
         }
         if (type === 'hero') body.append(
             field('Heading', 'heading', data.heading),
