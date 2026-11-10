@@ -1,0 +1,91 @@
+{
+  "_fonts-C9MNnjVw.css": {
+    "file": "assets/fonts-C9MNnjVw.css",
+    "src": "_fonts-C9MNnjVw.css"
+  },
+  "_instrument-sans-400-normal-D1W7dsQl.woff": {
+    "file": "assets/instrument-sans-400-normal-D1W7dsQl.woff",
+    "src": "_instrument-sans-400-normal-D1W7dsQl.woff"
+  },
+  "_instrument-sans-400-normal-DRC__1Mx.woff2": {
+    "file": "assets/instrument-sans-400-normal-DRC__1Mx.woff2",
+    "src": "_instrument-sans-400-normal-DRC__1Mx.woff2"
+  },
+  "_instrument-sans-500-normal-Dk9ku72i.woff2": {
+    "file": "assets/instrument-sans-500-normal-Dk9ku72i.woff2",
+    "src": "_instrument-sans-500-normal-Dk9ku72i.woff2"
+  },
+  "_instrument-sans-500-normal-Z6ESRlEs.woff": {
+    "file": "assets/instrument-sans-500-normal-Z6ESRlEs.woff",
+    "src": "_instrument-sans-500-normal-Z6ESRlEs.woff"
+  },
+  "_instrument-sans-600-normal-B7fBEWYG.woff2": {
+    "file": "assets/instrument-sans-600-normal-B7fBEWYG.woff2",
+    "src": "_instrument-sans-600-normal-B7fBEWYG.woff2"
+  },
+  "_instrument-sans-600-normal-B9e8oLYv.woff": {
+    "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
+    "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-DIo4Rs7z.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-B1-tzNV8.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/themes/stagy/assets/fonts/horizon.otf": {
+    "file": "assets/horizon-BZS2kkdk.otf",
+    "src": "resources/themes/stagy/assets/fonts/horizon.otf"
+  },
+  "resources/themes/stagy/assets/images/apple-touch-icon.png": {
+    "file": "assets/apple-touch-icon-DqSUoNsR.png",
+    "src": "resources/themes/stagy/assets/images/apple-touch-icon.png"
+  },
+  "resources/themes/stagy/assets/images/favicon-16.png": {
+    "file": "assets/favicon-16-aGsaQfRw.png",
+    "src": "resources/themes/stagy/assets/images/favicon-16.png"
+  },
+  "resources/themes/stagy/assets/images/favicon-32.png": {
+    "file": "assets/favicon-32-DN6i77vJ.png",
+    "src": "resources/themes/stagy/assets/images/favicon-32.png"
+  },
+  "resources/themes/stagy/assets/images/favicon-512.png": {
+    "file": "assets/favicon-512-DO_FOQIH.png",
+    "src": "resources/themes/stagy/assets/images/favicon-512.png"
+  },
+  "resources/themes/stagy/assets/images/logo.png": {
+    "file": "assets/logo-CyvqlCVT.png",
+    "src": "resources/themes/stagy/assets/images/logo.png"
+  },
+  "resources/themes/stagy/assets/images/og-default.png": {
+    "file": "assets/og-default-DV3OVcX_.png",
+    "src": "resources/themes/stagy/assets/images/og-default.png"
+  },
+  "resources/themes/stagy/stagy.css": {
+    "file": "assets/stagy-DoVeu2Y3.css",
+    "name": "stagy",
+    "names": [
+      "stagy.css"
+    ],
+    "src": "resources/themes/stagy/stagy.css",
+    "isEntry": true,
+    "assets": [
+      "assets/horizon-BZS2kkdk.otf"
+    ]
+  },
+  "resources/themes/stagy/stagy.js": {
+    "file": "assets/stagy-DkTdZ7XF.js",
+    "name": "stagy",
+    "src": "resources/themes/stagy/stagy.js",
+    "isEntry": true
+  }
+}
