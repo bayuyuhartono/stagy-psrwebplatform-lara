@@ -28,7 +28,24 @@
 @endphp
 
 <x-public.container as="section" width="article" class="py-6">
-    <div class="{{ $proseClass }}">
-        {!! $richText->render($data['content'] ?? '') !!}
-    </div>
+    @if ($inline ?? null)
+        {{-- Already sanitized and split by RichTextContent::splitNearMiddle() in posts/show. --}}
+        <div class="{{ $proseClass }}">{!! $inline['before'] !!}</div>
+        @php($suggested = $inline['post'])
+        <aside aria-label="{{ __('theme::site.blog.read_also') }}" class="my-10">
+            <a href="{{ localized_route('website.'.$suggested->type->value.'.show', $suggested->slug) }}" class="group flex items-center gap-4 rounded-2xl border border-public-line bg-public-mist p-4 pr-5 sm:p-3 transition hover:border-public-accent sm:gap-5">
+                <x-public.post-cover :post="$suggested" sizes="10rem" class="hidden aspect-[16/10] w-36 shrink-0 rounded-xl sm:block" />
+                <span class="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <span class="text-xs tracking-[0.08em] text-public-accent">{{ __('theme::site.blog.read_also') }}</span>
+                    <span class="line-clamp-2 text-[0.9375rem] leading-[1.45] text-public-ink group-hover:text-public-accent sm:text-base">{{ $suggested->title }}</span>
+                </span>
+                <x-public.icon name="arrow-right" class="size-5 shrink-0 text-public-accent transition group-hover:translate-x-1" />
+            </a>
+        </aside>
+        <div class="{{ $proseClass }}">{!! $inline['after'] !!}</div>
+    @else
+        <div class="{{ $proseClass }}">
+            {!! $richText->render($data['content'] ?? '') !!}
+        </div>
+    @endif
 </x-public.container>

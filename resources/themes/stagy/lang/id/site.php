@@ -92,6 +92,7 @@ return [
         'copy_link' => 'Salin link',
         'link_copied' => 'Link tersalin',
         'related' => 'Artikel terbaru lainnya',
+        'read_also' => 'Baca juga',
         'all_articles' => 'Semua artikel',
         'cover' => 'Cover artikel',
     ],

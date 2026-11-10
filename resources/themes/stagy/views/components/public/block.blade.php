@@ -1,4 +1,4 @@
-@props(['block', 'media' => null, 'position' => 0])
+@props(['block', 'media' => null, 'position' => 0, 'inline' => null])
 
 {{-- Dispatches each content block to its partial in public/blocks. `position` counts earlier blocks of the same type on the page. --}}
 @php($type = $block['type'] ?? null)
@@ -7,5 +7,6 @@
         'data' => $block['data'] ?? [],
         'blockMedia' => ($media ?? collect())->get($block['data']['media_id'] ?? ''),
         'position' => $position,
+        'inline' => $inline,
     ])
 @endif

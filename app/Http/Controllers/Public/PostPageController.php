@@ -114,7 +114,8 @@ class PostPageController extends Controller
                 ...$this->layoutData(),
                 'post' => $post,
                 'type' => $post->type,
-                'related' => $posts->relatedTo($post),
+                // One more than the 3 listed below the article: the closest match is suggested mid-article.
+                'related' => $posts->relatedTo($post, 4),
             ])
             ->header('X-Robots-Tag', 'noindex, nofollow');
     }
@@ -127,7 +128,8 @@ class PostPageController extends Controller
             ...$this->layoutData(),
             'post' => $post,
             'type' => $type,
-            'related' => $posts->relatedTo($post),
+            // One more than the 3 listed below the article: the closest match is suggested mid-article.
+            'related' => $posts->relatedTo($post, 4),
         ]);
     }
 

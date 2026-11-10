@@ -2,6 +2,9 @@
 
 namespace App\Features\ContentBlocks\Services;
 
+use DOMDocument;
+use DOMElement;
+use DOMNode;
 use Illuminate\Support\Str;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizer;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
@@ -48,6 +51,61 @@ class RichTextContent
     public function render(?string $content): string
     {
         return str_replace(['<table>', '</table>'], ['<div data-table-scroll><table>', '</table></div>'], $this->toHtml($content));
+    }
+
+    /**
+     * Rendered HTML cut in two near the middle of the text, for placing something
+     * (a "read also" suggestion) mid-article. It cuts before the subheading
+     * closest to the halfway point, else between paragraphs, and only between
+     * 30% and 70% of the words so the insert never sits at either end.
+     *
+     * @return array{0: string, 1: string}|null Null for short texts or when no clean cut exists.
+     */
+    public function splitNearMiddle(?string $content, int $minimumWords = 400): ?array
+    {
+        $html = $this->render($content);
+        if ($html === '') {
+            return null;
+        }
+
+        $document = new DOMDocument;
+        $document->loadHTML('<?xml encoding="UTF-8"><body>'.$html.'</body>', LIBXML_NOERROR | LIBXML_NOWARNING);
+        $nodes = array_values(array_filter(
+            iterator_to_array($document->getElementsByTagName('body')->item(0)?->childNodes ?? []),
+            fn (DOMNode $node): bool => $node instanceof DOMElement,
+        ));
+        $words = array_map(fn (DOMElement $node): int => preg_match_all('/[\p{L}\p{N}]+/u', $node->textContent), $nodes);
+        $total = array_sum($words);
+
+        if ($total < $minimumWords || count($nodes) < 2) {
+            return null;
+        }
+
+        $best = null;
+        $before = 0;
+        foreach ($nodes as $index => $node) {
+            if ($index > 0 && $before >= $total * 0.3 && $before <= $total * 0.7) {
+                // A cut before a subheading reads naturally; between two paragraphs is the fallback.
+                $quality = match (true) {
+                    in_array($node->nodeName, ['h2', 'h3'], true) => 2,
+                    $node->nodeName === 'p' && $nodes[$index - 1]->nodeName === 'p' => 1,
+                    default => 0,
+                };
+                $distance = abs($before - $total / 2);
+                if ($quality > 0 && ($best === null || [$quality, -$distance] > [$best['quality'], -$best['distance']])) {
+                    $best = ['index' => $index, 'quality' => $quality, 'distance' => $distance];
+                }
+            }
+            $before += $words[$index];
+        }
+
+        if ($best === null) {
+            return null;
+        }
+
+        $serialize = fn (array $part): string => implode('', array_map(fn (DOMElement $node): string => (string) $document->saveHTML($node), $part));
+
+        return [$serialize(array_slice($nodes, 0, $best['index'])), $serialize(array_slice($nodes, $best['index']))];
     }
 
     /**

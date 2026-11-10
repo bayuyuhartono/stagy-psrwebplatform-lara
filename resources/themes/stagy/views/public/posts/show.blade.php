@@ -1,5 +1,6 @@
 @inject('readingTime', 'App\Features\Posts\Services\ReadingTimeEstimator')
 @inject('blockMediaResolver', 'App\Features\ContentBlocks\Services\BlockMediaResolver')
+@inject('richText', 'App\Features\ContentBlocks\Services\RichTextContent')
 
 @php
     $listingRoute = 'website.'.$type->value;
@@ -45,8 +46,19 @@
             <x-public.container as="p" width="article" class="pt-8 font-public-body text-xl leading-[1.7] tracking-normal text-public-muted">{{ $post->excerpt }}</x-public.container>
         @endif
 
+        @php
+            // "Read also": the closest related article, placed mid-way through the first rich text block.
+            // Short articles have no clean middle, so they skip it and the list below keeps all three.
+            $firstRichText = collect($post->blocks ?? [])->firstWhere('type', 'rich_text');
+            $inlineSuggestion = $related->first();
+            $inlineSplit = $inlineSuggestion && $firstRichText ? $richText->splitNearMiddle($firstRichText['data']['content'] ?? '') : null;
+            $listedRelated = $inlineSplit ? $related->slice(1) : $related->take(3);
+        @endphp
         <div class="pt-2 pb-6">
-            @include('public.partials.blocks', ['blocks' => $post->blocks ?? []])
+            @include('public.partials.blocks', [
+                'blocks' => $post->blocks ?? [],
+                'inline' => $inlineSplit ? ['before' => $inlineSplit[0], 'after' => $inlineSplit[1], 'post' => $inlineSuggestion] : null,
+            ])
         </div>
 
         <x-public.container width="article" class="flex flex-wrap items-center gap-3 border-t border-public-line pt-6 pb-16">
@@ -58,12 +70,12 @@
         </x-public.container>
     </article>
 
-    @if ($related->isNotEmpty())
+    @if ($listedRelated->isNotEmpty())
         <section class="bg-public-mist py-20">
             <x-public.container class="flex flex-col gap-10">
                 <x-public.section-heading :heading="__('theme::site.blog.related')" :link="['label' => __('theme::site.blog.all_articles'), 'url' => localized_route($listingRoute.'.index')]" />
                 <div class="grid grid-cols-[repeat(auto-fill,minmax(17.5rem,1fr))] gap-5">
-                    @foreach ($related as $relatedPost)
+                    @foreach ($listedRelated as $relatedPost)
                         <x-public.post-card :post="$relatedPost" :excerpt="false" />
                     @endforeach
                 </div>

@@ -92,6 +92,7 @@ return [
         'copy_link' => 'Copy link',
         'link_copied' => 'Link copied',
         'related' => 'More recent articles',
+        'read_also' => 'Read also',
         'all_articles' => 'All articles',
         'cover' => 'Article cover',
     ],

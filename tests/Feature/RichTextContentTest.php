@@ -104,3 +104,18 @@ test('the migration converts stored markdown blocks', function () {
 
     expect($post->refresh()->blocks[0]['data']['content'])->toContain('<h2>Lama</h2>')->toContain('<li>satu</li>');
 });
+
+test('a long text is cut before the subheading nearest its middle', function () {
+    $section = '<p>'.str_repeat('kata ', 150).'</p>';
+    [$before, $after] = app(RichTextContent::class)->splitNearMiddle("<h2>Satu</h2>{$section}<h2>Dua</h2>{$section}<h2>Tiga</h2>{$section}");
+
+    expect($before)->toStartWith('<h2>Satu</h2>')->not->toContain('Dua')
+        ->and($after)->toStartWith('<h2>Dua</h2>')->toContain('Tiga');
+});
+
+test('short texts and texts without a clean middle are not cut', function (string $html) {
+    expect(app(RichTextContent::class)->splitNearMiddle($html))->toBeNull();
+})->with([
+    'short' => '<h2>Satu</h2><p>'.str_repeat('kata ', 100).'</p><h2>Dua</h2><p>'.str_repeat('kata ', 100).'</p>',
+    'one long paragraph' => '<p>'.str_repeat('kata ', 900).'</p>',
+]);

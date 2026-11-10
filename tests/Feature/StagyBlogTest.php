@@ -169,3 +169,33 @@ test('an article body is sanitized again on output and wide tables get a scroll 
         ->assertDontSee('onclick="steal()"', false)
         ->assertDontSee('<script>alert(1)</script>', false);
 });
+
+test('a long article suggests its closest related article mid-way and lists the others below', function () {
+    $guides = Category::factory()->create(['name' => 'Panduan', 'slug' => 'panduan', 'locale' => 'id']);
+    $section = '<p>'.str_repeat('Tamu datang lalu check-in. ', 40).'</p>';
+    blogPost(['slug' => 'panjang', 'blocks' => [['type' => 'rich_text', 'data' => ['content' => "<h2>Satu</h2>{$section}<h2>Dua</h2>{$section}<h2>Tiga</h2>{$section}"]]]])->categories()->attach($guides);
+    blogPost(['title' => 'Artikel sekategori', 'published_at' => now()->subMonths(3)])->categories()->attach($guides);
+    foreach (['Lain satu', 'Lain dua', 'Lain tiga'] as $index => $title) {
+        blogPost(['title' => $title, 'published_at' => now()->subDays($index + 1)]);
+    }
+
+    $content = $this->get('/blog/panjang')->assertSuccessful()->getContent();
+    $readAlso = strpos($content, 'Baca juga');
+
+    expect($readAlso)->toBeGreaterThan(strpos($content, '>Satu</h2>'))
+        ->and($readAlso)->toBeLessThan(strpos($content, '>Dua</h2>'))
+        ->and(substr_count($content, 'Artikel sekategori'))->toBe(1)
+        ->and($content)->toContain('Lain satu')->toContain('Lain dua')->toContain('Lain tiga');
+});
+
+test('a short article has no mid-way suggestion and lists three related articles', function () {
+    blogPost(['slug' => 'pendek', 'blocks' => [['type' => 'rich_text', 'data' => ['content' => '<p>Singkat saja.</p>']]]]);
+    foreach (['Lain satu', 'Lain dua', 'Lain tiga', 'Lain empat'] as $index => $title) {
+        blogPost(['title' => $title, 'published_at' => now()->subDays($index + 1)]);
+    }
+
+    $this->get('/blog/pendek')->assertSuccessful()
+        ->assertDontSee('Baca juga')
+        ->assertSee('Lain tiga')
+        ->assertDontSee('Lain empat');
+});
