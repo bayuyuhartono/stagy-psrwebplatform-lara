@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -44,3 +46,19 @@ test('the password is kept when the current password is wrong', function () {
 
     expect(Hash::check('old-password', $user->refresh()->password))->toBeTrue();
 });
+
+test('the media picker offers uploading only to users who may upload', function (array $permissions, bool $canUpload) {
+    $role = Role::factory()->create();
+    $role->permissions()->attach(collect($permissions)->map(fn (string $name): string => Permission::factory()->create(['name' => $name])->id));
+    $user = User::factory()->create();
+    $user->roles()->attach($role);
+
+    $response = $this->actingAs($user)->get('/cms/profile')->assertSee('data-media-picker', escape: false);
+
+    $canUpload
+        ? $response->assertSee('data-media-picker-upload', escape: false)
+        : $response->assertDontSee('data-media-picker-upload', escape: false);
+})->with([
+    'viewer and uploader' => [['media.view', 'media.upload'], true],
+    'viewer only' => [['media.view'], false],
+]);

@@ -2350,11 +2350,51 @@ let mediaPickerDebounce;
 if (mediaPicker) {
     const pickerGrid = mediaPicker.querySelector('[data-media-picker-grid]');
     const pickerSearch = mediaPicker.querySelector('[data-media-picker-search]');
+    const pickerUpload = mediaPicker.querySelector('[data-media-picker-upload]');
+    const pickerStatus = mediaPicker.querySelector('[data-media-picker-status]');
+
+    const showPickerStatus = (message, isError = false) => {
+        pickerStatus.textContent = message;
+        pickerStatus.className = `rounded-xl border p-3 text-sm ${isError ? 'border-red-200 bg-red-50 text-red-700' : 'border-cms-gold/30 bg-cms-gold/10 text-cms-navy'}`;
+    };
 
     const closePicker = () => {
         mediaPicker.classList.add('hidden');
         mediaPicker.classList.remove('flex');
+        pickerStatus.classList.add('hidden');
         mediaPickerTarget = null;
+    };
+
+    const selectMedia = (media) => {
+        if (!mediaPickerTarget) return;
+        // Callers that need the whole media record (the rich text editor's images) pass onSelect.
+        if (mediaPickerTarget.onSelect) {
+            const { onSelect } = mediaPickerTarget;
+            closePicker();
+            onSelect(media);
+            return;
+        }
+        mediaPickerTarget.input.value = media.id;
+        mediaPickerTarget.copy.textContent = media.original_name;
+        mediaPickerTarget.preview.replaceChildren(mediaVisual(media));
+        mediaPickerTarget.input.dispatchEvent(new Event('change'));
+        closePicker();
+    };
+
+    /** Upload straight from the picker; the new file is selected for the caller right away. */
+    const uploadFromPicker = async (file) => {
+        if (!file || !pickerUpload) return;
+        const body = new FormData();
+        body.append('file', file);
+        showPickerStatus(`Uploading ${file.name}…`);
+        try {
+            const payload = await apiRequest('/api/v1/admin/media', { method: 'POST', body });
+            selectMedia(payload.data);
+        } catch (error) {
+            showPickerStatus(Object.values(error.payload?.errors ?? {}).flat().join(' ') || 'Upload failed.', true);
+        } finally {
+            pickerUpload.value = '';
+        }
     };
 
     const loadPicker = () => {
@@ -2375,21 +2415,7 @@ if (mediaPicker) {
                     name.className = 'block truncate px-3 py-2.5 text-xs font-semibold text-cms-navy';
                     name.textContent = media.original_name;
                     button.append(visual, name);
-                    button.addEventListener('click', () => {
-                        if (!mediaPickerTarget) return;
-                        // Callers that need the whole media record (the rich text editor's images) pass onSelect.
-                        if (mediaPickerTarget.onSelect) {
-                            const { onSelect } = mediaPickerTarget;
-                            closePicker();
-                            onSelect(media);
-                            return;
-                        }
-                        mediaPickerTarget.input.value = media.id;
-                        mediaPickerTarget.copy.textContent = media.original_name;
-                        mediaPickerTarget.preview.replaceChildren(mediaVisual(media));
-                        mediaPickerTarget.input.dispatchEvent(new Event('change'));
-                        closePicker();
-                    });
+                    button.addEventListener('click', () => selectMedia(media));
                     pickerGrid.append(button);
                 });
 
@@ -2421,6 +2447,14 @@ if (mediaPicker) {
         window.clearTimeout(mediaPickerDebounce);
         mediaPickerDebounce = window.setTimeout(loadPicker, 250);
     });
+    pickerUpload?.addEventListener('change', () => uploadFromPicker(pickerUpload.files[0]));
+    if (pickerUpload) {
+        mediaPicker.addEventListener('dragover', (event) => { event.preventDefault(); });
+        mediaPicker.addEventListener('drop', (event) => {
+            event.preventDefault();
+            uploadFromPicker(event.dataTransfer?.files[0]);
+        });
+    }
 }
 
 const mediaLibrary = document.querySelector('[data-media-library]');

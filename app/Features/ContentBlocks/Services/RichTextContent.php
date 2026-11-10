@@ -9,7 +9,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 /**
  * The rich_text block's content is HTML written by the CMS editor. Anything
  * that reaches storage or the page passes through this allowlist, so editors
- * keep headings, tables, alignment, images and YouTube embeds while scripts,
+ * keep headings, tables, alignment, images and provider embeds while scripts,
  * event handlers, inline styles and unsafe URLs are removed.
  *
  * Content that is not HTML (blocks written as Markdown before the editor
@@ -111,8 +111,9 @@ class RichTextContent
                 ->allowElement('th', ['colspan', 'rowspan'])
                 ->allowElement('td', ['colspan', 'rowspan'])
                 ->allowElement('img', ['src', 'alt', 'title'])
-                ->allowElement('div', ['data-youtube-video'])
-                ->allowElement('iframe', ['src', 'allowfullscreen'])
+                ->allowElement('div', ['data-youtube-video', 'data-embed'])
+                ->allowElement('iframe', ['src', 'title', 'allowfullscreen'])
+                ->forceAttribute('iframe', 'loading', 'lazy')
                 ->allowLinkSchemes(['http', 'https', 'mailto', 'tel'])
                 ->allowRelativeLinks()
                 ->allowMediaSchemes(['http', 'https'])

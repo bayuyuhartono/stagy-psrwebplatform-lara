@@ -7,13 +7,26 @@ use Symfony\Component\HtmlSanitizer\Visitor\AttributeSanitizer\AttributeSanitize
 
 /**
  * Value checks the generic sanitizer cannot express: an alignment must be one
- * of the editor's options, and an iframe may only embed a YouTube player.
+ * of the editor's options, and an iframe may only load a known provider's
+ * embed player over HTTPS.
  */
 class RichTextAttributeSanitizer implements AttributeSanitizerInterface
 {
     public const ALIGNMENTS = ['left', 'center', 'right', 'justify'];
 
-    public const EMBED_HOSTS = ['www.youtube-nocookie.com', 'youtube-nocookie.com', 'www.youtube.com', 'youtube.com'];
+    /**
+     * Embeddable players: provider => [allowed hosts, pattern the URL path must match].
+     *
+     * @var array<string, array{0: list<string>, 1: string}>
+     */
+    public const EMBED_PROVIDERS = [
+        'youtube' => [['www.youtube-nocookie.com', 'youtube-nocookie.com', 'www.youtube.com', 'youtube.com'], '#^/embed/[\w-]+$#'],
+        'vimeo' => [['player.vimeo.com'], '#^/video/\d+$#'],
+        'maps' => [['www.google.com', 'maps.google.com'], '#^/maps/embed$#'],
+        'spotify' => [['open.spotify.com'], '#^/embed/(track|album|playlist|episode|show|artist)/\w+$#'],
+        'instagram' => [['www.instagram.com', 'instagram.com'], '#^/(p|reel)/[\w-]+/embed/?$#'],
+        'tiktok' => [['www.tiktok.com'], '#^/embed/v2/\d+$#'],
+    ];
 
     /**
      * @return list<string>|null
@@ -28,28 +41,36 @@ class RichTextAttributeSanitizer implements AttributeSanitizerInterface
      */
     public function getSupportedAttributes(): ?array
     {
-        return ['data-align', 'src'];
+        return ['data-align', 'data-embed', 'src'];
     }
 
     public function sanitizeAttribute(string $element, string $attribute, string $value, HtmlSanitizerConfig $config): ?string
     {
-        if ($attribute === 'data-align') {
-            return in_array($value, self::ALIGNMENTS, true) ? $value : null;
-        }
-
-        if ($element === 'iframe') {
-            return $this->isYouTubeEmbed($value) ? $value : null;
-        }
-
-        return $value;
+        return match (true) {
+            $attribute === 'data-align' => in_array($value, self::ALIGNMENTS, true) ? $value : null,
+            $attribute === 'data-embed' => array_key_exists($value, self::EMBED_PROVIDERS) ? $value : null,
+            $element === 'iframe' => self::embedProvider($value) !== null ? $value : null,
+            default => $value,
+        };
     }
 
-    private function isYouTubeEmbed(string $url): bool
+    /**
+     * The provider whose player the URL loads, or null when it is not an allowed embed.
+     */
+    public static function embedProvider(string $url): ?string
     {
         $parts = parse_url($url);
 
-        return ($parts['scheme'] ?? null) === 'https'
-            && in_array($parts['host'] ?? null, self::EMBED_HOSTS, true)
-            && str_starts_with($parts['path'] ?? '', '/embed/');
+        if (($parts['scheme'] ?? null) !== 'https') {
+            return null;
+        }
+
+        foreach (self::EMBED_PROVIDERS as $provider => [$hosts, $pathPattern]) {
+            if (in_array($parts['host'] ?? null, $hosts, true) && preg_match($pathPattern, $parts['path'] ?? '')) {
+                return $provider;
+            }
+        }
+
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-import { Editor } from '@tiptap/core';
+import { Editor, Node } from '@tiptap/core';
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import { TableKit } from '@tiptap/extension-table';
@@ -33,6 +33,75 @@ const Alignment = TextAlign.extend({
     },
 });
 
+const EMBED_LABELS = { youtube: 'YouTube', vimeo: 'Vimeo', maps: 'Google Maps', spotify: 'Spotify', instagram: 'Instagram', tiktok: 'TikTok' };
+
+/**
+ * Turn a share link or pasted <iframe> embed code into a provider's player URL.
+ * Mirrors the server allowlist in RichTextAttributeSanitizer::EMBED_PROVIDERS.
+ *
+ * @returns {{provider: string, src: string}|null}
+ */
+const toEmbed = (input) => {
+    let raw = input.trim();
+    const iframeSource = raw.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    if (iframeSource) raw = iframeSource[1].replaceAll('&amp;', '&');
+    let url;
+    try {
+        url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    } catch {
+        return null;
+    }
+    const host = url.hostname.replace(/^(www|m)\./, '');
+    const path = url.pathname;
+
+    if (['youtube.com', 'youtu.be', 'youtube-nocookie.com'].includes(host)) return { provider: 'youtube', src: url.href };
+    if (host === 'vimeo.com' || host === 'player.vimeo.com') {
+        const id = path.match(/(\d+)/)?.[1];
+        return id ? { provider: 'vimeo', src: `https://player.vimeo.com/video/${id}` } : null;
+    }
+    if ((host === 'google.com' || host === 'maps.google.com') && path === '/maps/embed') return { provider: 'maps', src: `https://www.google.com/maps/embed${url.search}` };
+    if (host === 'open.spotify.com') {
+        const match = path.replace(/^\/intl-[a-z-]+/i, '').replace(/^\/embed/, '').match(/^\/(track|album|playlist|episode|show|artist)\/(\w+)/);
+        return match ? { provider: 'spotify', src: `https://open.spotify.com/embed/${match[1]}/${match[2]}` } : null;
+    }
+    if (host === 'instagram.com') {
+        const match = path.match(/^\/(p|reel)\/([\w-]+)/);
+        return match ? { provider: 'instagram', src: `https://www.instagram.com/${match[1]}/${match[2]}/embed` } : null;
+    }
+    if (host === 'tiktok.com') {
+        const id = path.match(/\/video\/(\d+)/)?.[1] ?? path.match(/^\/embed\/v2\/(\d+)/)?.[1];
+        return id ? { provider: 'tiktok', src: `https://www.tiktok.com/embed/v2/${id}` } : null;
+    }
+
+    return null;
+};
+
+/** A provider's player (everything but YouTube, which keeps Tiptap's own node), stored as div[data-embed] > iframe. */
+const Embed = Node.create({
+    name: 'embed',
+    group: 'block',
+    atom: true,
+    draggable: true,
+    addAttributes() {
+        return { provider: { default: null, rendered: false }, src: { default: null, rendered: false } };
+    },
+    parseHTML() {
+        return [{
+            tag: 'div[data-embed]',
+            getAttrs: (element) => {
+                const src = element.querySelector('iframe')?.getAttribute('src');
+                return src ? { provider: element.getAttribute('data-embed'), src } : false;
+            },
+        }];
+    },
+    renderHTML({ node }) {
+        return ['div', { 'data-embed': node.attrs.provider }, ['iframe', { src: node.attrs.src, title: `${EMBED_LABELS[node.attrs.provider] ?? 'Embedded'} content`, allowfullscreen: 'true', loading: 'lazy' }]];
+    },
+});
+
+/** Line breaks after block-level closing tags so the HTML source view is readable without changing the content. */
+const formatSource = (html) => html.replace(/(<\/(?:p|h[1-6]|ul|ol|li|blockquote|table|thead|tbody|tr|pre|div)>|<hr>|<img[^>]*>)/g, '$1\n').trim();
+
 const buttonClass = 'grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-bold text-cms-navy/70 hover:bg-cms-canvas hover:text-cms-navy disabled:pointer-events-none disabled:opacity-30 aria-pressed:bg-cms-navy aria-pressed:text-white';
 
 const editorClass = [
@@ -46,6 +115,7 @@ const editorClass = [
     '[&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-cms-navy [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:text-white [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-cms-canvas [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono',
     '[&_img]:my-3 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-xl [&_img.ProseMirror-selectednode]:outline-3 [&_img.ProseMirror-selectednode]:outline-cms-gold',
     '[&_iframe]:my-3 [&_iframe]:aspect-video [&_iframe]:h-auto [&_iframe]:w-full [&_iframe]:rounded-xl [&_.ProseMirror-selectednode_iframe]:outline-3 [&_.ProseMirror-selectednode_iframe]:outline-cms-gold',
+    '[&_[data-embed]]:my-3 [&_[data-embed=maps]_iframe]:aspect-[4/3] [&_[data-embed=spotify]_iframe]:aspect-auto [&_[data-embed=spotify]_iframe]:h-88 [&_[data-embed=instagram]_iframe]:mx-auto [&_[data-embed=instagram]_iframe]:aspect-auto [&_[data-embed=instagram]_iframe]:h-170 [&_[data-embed=instagram]_iframe]:max-w-135 [&_[data-embed=tiktok]_iframe]:mx-auto [&_[data-embed=tiktok]_iframe]:aspect-auto [&_[data-embed=tiktok]_iframe]:h-185 [&_[data-embed=tiktok]_iframe]:max-w-81 [&_[data-embed].ProseMirror-selectednode_iframe]:outline-3 [&_[data-embed].ProseMirror-selectednode_iframe]:outline-cms-gold',
     '[&_.tableWrapper]:my-3 [&_.tableWrapper]:overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs',
     '[&_td]:relative [&_td]:min-w-20 [&_td]:border [&_td]:border-cms-navy/15 [&_td]:px-2.5 [&_td]:py-1.5 [&_td]:align-top [&_th]:relative [&_th]:min-w-20 [&_th]:border [&_th]:border-cms-navy/15 [&_th]:bg-cms-canvas [&_th]:px-2.5 [&_th]:py-1.5 [&_th]:text-left [&_th]:align-top [&_td_p]:my-0 [&_th_p]:my-0',
     '[&_.selectedCell]:bg-cms-gold/20',
@@ -83,7 +153,13 @@ export function mountRichTextEditor(textarea) {
     tableRow.className = 'hidden flex-wrap items-center gap-1 border-t border-cms-navy/8 pt-1';
     toolbar.append(mainRow, tableRow);
     const surface = document.createElement('div');
-    shell.append(toolbar, surface);
+    const source = document.createElement('textarea');
+    source.hidden = true;
+    source.spellcheck = false;
+    source.setAttribute('aria-label', 'HTML source');
+    source.className = 'block min-h-72 w-full resize-y rounded-b-xl bg-cms-navy px-4 py-3 font-mono text-xs leading-6 text-white outline-none';
+    shell.append(toolbar, surface, source);
+    let sourceMode = false;
 
     const editor = new Editor({
         element: surface,
@@ -98,6 +174,7 @@ export function mountRichTextEditor(textarea) {
             Image.configure({ inline: false, allowBase64: false }),
             Youtube.configure({ nocookie: true, controls: true, width: 640, height: 360 }),
             TableKit.configure({ table: { resizable: false } }),
+            Embed,
         ],
         content: textarea.value,
         editorProps: { attributes: { class: editorClass, 'aria-label': 'Content', 'aria-multiline': 'true', role: 'textbox' } },
@@ -108,6 +185,21 @@ export function mountRichTextEditor(textarea) {
     });
 
     const chain = () => editor.chain().focus();
+
+    /**
+     * An inserted image or embed stays selected, so the next insert would replace it.
+     * Put the cursor in the paragraph after it instead, adding one when there is none.
+     */
+    const continueAfterInsertedNode = () => {
+        const { selection, doc } = editor.state;
+        if (!selection.node) return;
+        const after = selection.to;
+        if (doc.resolve(after).nodeAfter?.isTextblock) {
+            editor.chain().focus().setTextSelection(after + 1).run();
+            return;
+        }
+        editor.chain().focus().insertContentAt(after, { type: 'paragraph' }).setTextSelection(after + 1).run();
+    };
 
     const toggleLink = () => {
         if (editor.isActive('link')) {
@@ -129,6 +221,7 @@ export function mountRichTextEditor(textarea) {
                 return;
             }
             chain().setImage({ src: mediaSource(media.url), alt: media.alt_text || '', title: media.caption || null }).run();
+            continueAfterInsertedNode();
         };
         window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { onSelect: insert } }));
     };
@@ -139,11 +232,42 @@ export function mountRichTextEditor(textarea) {
         if (alt !== null) chain().updateAttributes('image', { alt: alt.trim() }).run();
     };
 
-    const insertVideo = () => {
-        const url = window.prompt('YouTube video URL');
-        if (!url) return;
-        if (!chain().setYoutubeVideo({ src: url.trim() }).run()) window.alert('That is not a YouTube video link.');
+    const insertEmbed = () => {
+        const input = window.prompt('Paste a link or embed code from YouTube, Vimeo, Google Maps, Spotify, Instagram or TikTok.\nGoogle Maps: Share → Embed a map → Copy HTML.');
+        if (!input) return;
+        const embed = toEmbed(input);
+        if (embed?.provider === 'youtube') {
+            if (chain().setYoutubeVideo({ src: embed.src }).run()) continueAfterInsertedNode();
+            else window.alert('That is not a YouTube video link.');
+            return;
+        }
+        if (!embed) {
+            window.alert('That link cannot be embedded. Use a YouTube, Vimeo, Spotify, Instagram or TikTok link, or the embed code from Google Maps.');
+            return;
+        }
+        chain().insertContent({ type: 'embed', attrs: embed }).run();
+        continueAfterInsertedNode();
     };
+
+    const toggleSource = () => {
+        sourceMode = !sourceMode;
+        if (sourceMode) {
+            source.value = formatSource(editor.getHTML());
+            source.style.height = `${Math.max(surface.offsetHeight, 288)}px`;
+        } else {
+            // The editor keeps only what it supports; the server sanitizes the rest on save.
+            editor.commands.setContent(source.value, { emitUpdate: true });
+        }
+        surface.hidden = sourceMode;
+        source.hidden = !sourceMode;
+        syncToolbar();
+        (sourceMode ? source : editor.view.dom).focus();
+    };
+    // Edits in the HTML view are saved even if the editor is never switched back.
+    source.addEventListener('input', () => {
+        textarea.value = source.value.trim();
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
 
     const separator = () => {
         const line = document.createElement('span');
@@ -186,11 +310,13 @@ export function mountRichTextEditor(textarea) {
         separator(),
         ...(hasMediaPicker ? [{ label: 'Image', title: 'Insert image from the Media Library', run: insertImage }] : []),
         { label: 'Alt', title: 'Edit image alternative text', run: editImageAlt, visible: () => editor.isActive('image') },
-        { label: 'YouTube', title: 'Embed a YouTube video', run: insertVideo },
+        { label: 'Embed', title: 'Embed YouTube, Vimeo, Google Maps, Spotify, Instagram or TikTok', run: insertEmbed },
         { label: 'Table', title: 'Insert table', run: () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), enabled: () => !editor.isActive('table') },
         separator(),
         { label: '↶', title: 'Undo', run: () => chain().undo().run(), enabled: () => editor.can().undo() },
         { label: '↷', title: 'Redo', run: () => chain().redo().run(), enabled: () => editor.can().redo() },
+        separator(),
+        { label: 'HTML', title: 'Edit as HTML', run: () => toggleSource(), active: () => sourceMode, source: true },
     ];
 
     const tableTools = [
@@ -230,18 +356,20 @@ export function mountRichTextEditor(textarea) {
 
     const buttons = [...renderTools(mainTools, mainRow), ...renderTools(tableTools, tableRow)];
 
-    const syncToolbar = () => {
+    function syncToolbar() {
         buttons.forEach(({ tool, button }) => {
             if (tool.active) button.setAttribute('aria-pressed', String(tool.active()));
-            if (tool.enabled) button.disabled = !tool.enabled();
-            if (tool.visible) button.hidden = !tool.visible();
+            // In the HTML view only the HTML toggle works; formatting applies to the visual editor.
+            button.disabled = sourceMode ? !tool.source : (tool.enabled ? !tool.enabled() : false);
+            if (tool.visible) button.hidden = sourceMode || !tool.visible();
         });
+        blockStyle.disabled = sourceMode;
         const level = editor.getAttributes('heading').level;
         blockStyle.value = editor.isActive('heading') && level ? String(level) : 'paragraph';
-        const inTable = editor.isActive('table');
+        const inTable = !sourceMode && editor.isActive('table');
         tableRow.classList.toggle('hidden', !inTable);
         tableRow.classList.toggle('flex', inTable);
-    };
+    }
     editor.on('selectionUpdate', syncToolbar);
     editor.on('transaction', syncToolbar);
     syncToolbar();

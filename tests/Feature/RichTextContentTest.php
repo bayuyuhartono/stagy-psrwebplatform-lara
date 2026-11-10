@@ -48,13 +48,32 @@ test('the empty paragraph the editor keeps after a final table is dropped', func
     expect(richText('<table><tbody><tr><td><p>A</p></td></tr></tbody></table><p></p>'))->toEndWith('</table>');
 });
 
-test('only youtube players may be embedded', function (string $source) {
-    expect(richText("<div data-youtube-video=\"\"><iframe src=\"{$source}\"></iframe></div>"))->not->toContain('src=');
+test('players from the supported providers can be embedded', function (string $provider, string $source) {
+    expect(richText("<div data-embed=\"{$provider}\"><iframe src=\"{$source}\" title=\"Player\"></iframe></div>"))
+        ->toContain("<div data-embed=\"{$provider}\">")
+        ->toContain('src="'.strtok($source, '?'))
+        ->toContain('loading="lazy"');
+})->with([
+    'vimeo' => ['vimeo', 'https://player.vimeo.com/video/76979871'],
+    'google maps' => ['maps', 'https://www.google.com/maps/embed?pb=!1m18!1m12'],
+    'spotify' => ['spotify', 'https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC'],
+    'instagram' => ['instagram', 'https://www.instagram.com/p/C1a2B3c4D5e/embed'],
+    'tiktok' => ['tiktok', 'https://www.tiktok.com/embed/v2/7231338487075638570'],
+]);
+
+test('iframes outside the embed allowlist lose their source', function (string $source) {
+    expect(richText("<div data-embed=\"vimeo\"><iframe src=\"{$source}\"></iframe></div>"))->not->toContain('src=');
 })->with([
     'another host' => 'https://evil.example/embed/abc',
-    'plain http' => 'http://www.youtube.com/embed/abc',
-    'not an embed page' => 'https://www.youtube.com/watch?v=abc',
+    'plain http' => 'http://player.vimeo.com/video/123',
+    'not a player page' => 'https://www.youtube.com/watch?v=abc',
+    'a google page that is not a map' => 'https://www.google.com/search?q=x',
+    'a lookalike host' => 'https://player.vimeo.com.evil.example/video/123',
 ]);
+
+test('an unknown embed provider name is dropped', function () {
+    expect(richText('<div data-embed="evil"><p>x</p></div>'))->not->toContain('data-embed');
+});
 
 test('markdown and plain text are converted to html', function () {
     expect(richText("## Judul\n\nIsi **tebal**.\n\n<script>alert(1)</script>"))

@@ -106,11 +106,18 @@
                     <header class="flex items-center gap-4 border-b border-cms-navy/10 bg-white/65 px-5 py-4 sm:px-6">
                         <div class="min-w-0 flex-1">
                             <h2 class="font-bold text-cms-navy">Choose media</h2>
-                            <p class="mt-0.5 text-xs text-cms-navy/45">Select an existing file for this content block.</p>
+                            <p class="mt-0.5 text-xs text-cms-navy/45">Select an existing file{{ auth()->user()->can('create', App\Models\Media::class) ? ', or upload or drop a new one here' : '' }}.</p>
                         </div>
+                        @can('create', App\Models\Media::class)
+                            <label class="inline-flex h-9 cursor-pointer items-center rounded-xl bg-cms-gold px-4 text-sm font-bold text-cms-navy focus-within:ring-3 focus-within:ring-cms-gold/30">
+                                Upload
+                                <input data-media-picker-upload type="file" accept=".{{ implode(',.', config('media.allowed_types')) }}" class="sr-only">
+                            </label>
+                        @endcan
                         <button data-media-picker-close type="button" class="grid size-9 place-items-center rounded-xl border border-cms-navy/10 bg-white text-cms-navy" aria-label="Close media picker">×</button>
                     </header>
-                    <div class="border-b border-cms-navy/8 p-4 sm:px-6">
+                    <div class="grid gap-3 border-b border-cms-navy/8 p-4 sm:px-6">
+                        <p data-media-picker-status class="hidden rounded-xl border p-3 text-sm" role="status"></p>
                         <input data-media-picker-search type="search" placeholder="Search media…" class="h-11 w-full rounded-xl border border-cms-navy/10 bg-white px-4 text-sm outline-none focus:border-cms-gold focus:ring-3 focus:ring-cms-gold/15">
                     </div>
                     <div data-media-picker-grid class="grid flex-1 grid-cols-2 gap-3 overflow-y-auto p-4 sm:grid-cols-3 sm:p-6 lg:grid-cols-4"></div>
