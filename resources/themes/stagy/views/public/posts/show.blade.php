@@ -38,14 +38,14 @@
         </x-public.container>
 
         @if (filled($post->excerpt))
-            <x-public.container as="p" width="text" class="pt-8 text-lg leading-[1.8] text-public-muted">{{ $post->excerpt }}</x-public.container>
+            <x-public.container as="p" width="article" class="pt-8 text-lg leading-[1.8] text-public-muted">{{ $post->excerpt }}</x-public.container>
         @endif
 
         <div class="pt-2 pb-6">
             @include('public.partials.blocks', ['blocks' => $post->blocks ?? []])
         </div>
 
-        <x-public.container width="text" class="flex flex-wrap items-center gap-3 border-t border-public-line pt-6 pb-16">
+        <x-public.container width="article" class="flex flex-wrap items-center gap-3 border-t border-public-line pt-6 pb-16">
             <span class="mr-2 text-xs tracking-[0.08em] text-public-muted">{{ __('theme::site.blog.share') }}</span>
             <a href="https://wa.me/?text={{ $shareText }}" target="_blank" rel="noopener" aria-label="{{ __('theme::site.blog.share_whatsapp') }}" class="grid size-11 place-items-center rounded-xl border border-public-line transition hover:border-public-accent"><x-public.icon name="whatsapp" class="size-4.5" /></a>
             <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ rawurlencode($articleUrl) }}" target="_blank" rel="noopener" aria-label="{{ __('theme::site.blog.share_linkedin') }}" class="grid size-11 place-items-center rounded-xl border border-public-line transition hover:border-public-accent"><x-public.icon name="linkedin" class="size-4.5" /></a>

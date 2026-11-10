@@ -22,7 +22,7 @@
     ]);
 @endphp
 
-<x-public.container as="section" width="text" class="py-6">
+<x-public.container as="section" width="article" class="py-6">
     <div class="{{ $proseClass }}">
         {!! $richText->render($data['content'] ?? '') !!}
     </div>
