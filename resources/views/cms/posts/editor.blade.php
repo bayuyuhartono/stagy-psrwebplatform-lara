@@ -140,22 +140,22 @@
                 @endif
             </div>
 
-            <aside class="grid content-start gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:pb-2">
+            <aside class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto xl:overflow-x-hidden xl:pb-2">
                 <section class="grid gap-4 rounded-2xl border border-cms-navy/8 bg-white/70 p-5 shadow-sm">
                     <h3 class="font-bold">Publish</h3>
                     <div class="grid grid-cols-2 gap-3">
-                        <label class="grid gap-2">
+                        <label class="grid min-w-0 gap-2">
                             <span class="text-xs font-semibold text-cms-navy/60">Status</span>
-                            <select data-page-status class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm font-semibold"><option value="draft">Draft</option><option value="published">Published</option></select>
+                            <select data-page-status class="h-11 w-full min-w-0 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm font-semibold"><option value="draft">Draft</option><option value="published">Published</option></select>
                         </label>
-                        <label class="grid gap-2">
+                        <label class="grid min-w-0 gap-2">
                             <span class="text-xs font-semibold text-cms-navy/60">Type</span>
-                            <select data-post-type class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm font-semibold"><option value="blog">Blog</option><option value="news">News</option></select>
+                            <select data-post-type class="h-11 w-full min-w-0 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm font-semibold"><option value="blog">Blog</option><option value="news">News</option></select>
                         </label>
                     </div>
-                    <label data-post-published-field class="grid gap-2">
+                    <label data-post-published-field class="grid min-w-0 gap-2">
                         <span class="text-xs font-semibold text-cms-navy/60">Publish date</span>
-                        <input data-post-published-at type="datetime-local" class="h-11 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm">
+                        <input data-post-published-at type="datetime-local" class="h-11 w-full min-w-0 rounded-xl border border-cms-navy/10 bg-white px-3 text-sm">
                         <span class="text-xs leading-5 text-cms-navy/45">Leave empty to publish now. A future date schedules the article.</span>
                     </label>
                     <label class="flex items-start gap-3 rounded-xl bg-cms-canvas/60 p-3">
