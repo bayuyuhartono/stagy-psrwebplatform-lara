@@ -1,23 +1,54 @@
 import { Editor } from '@tiptap/core';
-import { Markdown } from '@tiptap/markdown';
+import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
+import { TableKit } from '@tiptap/extension-table';
+import TextAlign from '@tiptap/extension-text-align';
+import Youtube from '@tiptap/extension-youtube';
 import StarterKit from '@tiptap/starter-kit';
 
 /**
- * WYSIWYG editing for the rich_text block. The block is still stored as
- * Markdown: the original textarea stays in the form (hidden) as the value the
- * block serializer reads, and every edit writes the editor's Markdown back to it.
- * The public site keeps rendering it with Str::markdown and stripping raw HTML.
- *
- * Only what that Markdown round-trips is offered: H2/H3, bold, italic, lists,
- * quotes and links.
+ * WYSIWYG editing for the rich_text block, stored as HTML. The original
+ * textarea stays in the form (hidden) as the value the block serializer reads;
+ * every edit writes the editor's HTML back to it. The server sanitizes that
+ * HTML (App\Features\ContentBlocks\Services\RichTextContent) on save and on
+ * output, so the editor only offers what that allowlist keeps.
  */
-const buttonClass = 'grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-bold text-cms-navy/70 hover:bg-cms-canvas hover:text-cms-navy disabled:opacity-30 aria-pressed:bg-cms-navy aria-pressed:text-white';
+
+/**
+ * Alignment is stored as data-align rather than an inline style: the server
+ * strips every style attribute, and themes style [data-align] themselves.
+ */
+const Alignment = TextAlign.extend({
+    addGlobalAttributes() {
+        return [{
+            types: this.options.types,
+            attributes: {
+                textAlign: {
+                    default: null,
+                    parseHTML: (element) => element.getAttribute('data-align') || element.style.textAlign || null,
+                    renderHTML: (attributes) => (attributes.textAlign && attributes.textAlign !== 'left' ? { 'data-align': attributes.textAlign } : {}),
+                },
+            },
+        }];
+    },
+});
+
+const buttonClass = 'grid h-8 min-w-8 place-items-center rounded-lg px-2 text-xs font-bold text-cms-navy/70 hover:bg-cms-canvas hover:text-cms-navy disabled:pointer-events-none disabled:opacity-30 aria-pressed:bg-cms-navy aria-pressed:text-white';
 
 const editorClass = [
-    'min-h-72 max-w-none px-4 py-3 text-sm leading-7 text-cms-navy outline-none',
-    '[&_a]:text-cms-green [&_a]:underline [&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-cms-gold [&_blockquote]:pl-4 [&_blockquote]:text-cms-navy/60',
-    '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-base [&_h3]:font-bold',
-    '[&_li]:mt-1 [&_li_p]:my-0 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&>*:first-child]:mt-0',
+    'min-h-72 max-w-none px-4 py-3 text-sm leading-7 text-cms-navy outline-none [&>*:first-child]:mt-0',
+    '[&_p]:my-2 [&_a]:text-cms-green [&_a]:underline [&_mark]:rounded [&_mark]:bg-cms-gold/35 [&_mark]:px-0.5',
+    '[&_h2]:mt-5 [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-base [&_h3]:font-bold [&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-sm [&_h4]:font-bold',
+    '[&_li]:mt-1 [&_li_p]:my-0 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6',
+    '[&_blockquote]:my-3 [&_blockquote]:border-l-2 [&_blockquote]:border-cms-gold [&_blockquote]:pl-4 [&_blockquote]:text-cms-navy/60',
+    '[&_[data-align=center]]:text-center [&_[data-align=right]]:text-right [&_[data-align=justify]]:text-justify',
+    '[&_hr]:my-5 [&_hr]:border-cms-navy/15 [&_hr.ProseMirror-selectednode]:border-cms-gold',
+    '[&_pre]:my-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-cms-navy [&_pre]:p-4 [&_pre]:font-mono [&_pre]:text-xs [&_pre]:text-white [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-cms-canvas [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:font-mono',
+    '[&_img]:my-3 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-xl [&_img.ProseMirror-selectednode]:outline-3 [&_img.ProseMirror-selectednode]:outline-cms-gold',
+    '[&_iframe]:my-3 [&_iframe]:aspect-video [&_iframe]:h-auto [&_iframe]:w-full [&_iframe]:rounded-xl [&_.ProseMirror-selectednode_iframe]:outline-3 [&_.ProseMirror-selectednode_iframe]:outline-cms-gold',
+    '[&_.tableWrapper]:my-3 [&_.tableWrapper]:overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs',
+    '[&_td]:relative [&_td]:min-w-20 [&_td]:border [&_td]:border-cms-navy/15 [&_td]:px-2.5 [&_td]:py-1.5 [&_td]:align-top [&_th]:relative [&_th]:min-w-20 [&_th]:border [&_th]:border-cms-navy/15 [&_th]:bg-cms-canvas [&_th]:px-2.5 [&_th]:py-1.5 [&_th]:text-left [&_th]:align-top [&_td_p]:my-0 [&_th_p]:my-0',
+    '[&_.selectedCell]:bg-cms-gold/20',
 ].join(' ');
 
 const normalizeUrl = (url) => {
@@ -27,20 +58,30 @@ const normalizeUrl = (url) => {
     return `https://${trimmed}`;
 };
 
-/**
- * The serializer writes a typed "&" as "&amp;". Both render the same, but the
- * stored text is also read raw (excerpts, search, reading time), so keep a bare
- * "&" unless it would then read as an entity such as "&lt;".
- */
-const toStoredMarkdown = (markdown) => markdown.replace(/&amp;(?![a-zA-Z][a-zA-Z0-9]*;|#[0-9]+;|#x[0-9a-fA-F]+;)/g, '&').trimEnd();
+/** Media on this site's public disk is stored as a path so content survives a domain change. */
+const mediaSource = (url) => {
+    try {
+        const parsed = new URL(url, window.location.origin);
+
+        return parsed.pathname.startsWith('/storage/') ? `${parsed.pathname}${parsed.search}` : parsed.href;
+    } catch {
+        return url;
+    }
+};
 
 export function mountRichTextEditor(textarea) {
     const shell = document.createElement('div');
-    shell.className = 'overflow-hidden rounded-xl border border-cms-navy/10 bg-white focus-within:border-cms-gold';
+    shell.className = 'rounded-xl border border-cms-navy/10 bg-white focus-within:border-cms-gold';
     const toolbar = document.createElement('div');
-    toolbar.className = 'flex flex-wrap items-center gap-1 border-b border-cms-navy/8 bg-cms-canvas/40 p-1.5';
+    // Sticks under the 5rem CMS header so it stays in reach in long articles.
+    toolbar.className = 'sticky top-20 z-10 grid gap-1 rounded-t-xl border-b border-cms-navy/8 bg-cms-canvas/95 p-1.5 backdrop-blur';
     toolbar.setAttribute('role', 'toolbar');
     toolbar.setAttribute('aria-label', 'Text formatting');
+    const mainRow = document.createElement('div');
+    mainRow.className = 'flex flex-wrap items-center gap-1';
+    const tableRow = document.createElement('div');
+    tableRow.className = 'hidden flex-wrap items-center gap-1 border-t border-cms-navy/8 pt-1';
+    toolbar.append(mainRow, tableRow);
     const surface = document.createElement('div');
     shell.append(toolbar, surface);
 
@@ -48,51 +89,131 @@ export function mountRichTextEditor(textarea) {
         element: surface,
         extensions: [
             StarterKit.configure({
-                heading: { levels: [2, 3] },
-                code: false,
-                codeBlock: false,
-                horizontalRule: false,
-                strike: false,
-                underline: false,
-                link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
+                heading: { levels: [2, 3, 4] },
+                // No target/rel: links open in the same tab and the sanitizer drops both anyway.
+                link: { openOnClick: false, autolink: true, defaultProtocol: 'https', HTMLAttributes: { target: null, rel: null } },
             }),
-            Markdown,
+            Alignment.configure({ types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
+            Highlight,
+            Image.configure({ inline: false, allowBase64: false }),
+            Youtube.configure({ nocookie: true, controls: true, width: 640, height: 360 }),
+            TableKit.configure({ table: { resizable: false } }),
         ],
         content: textarea.value,
-        contentType: 'markdown',
         editorProps: { attributes: { class: editorClass, 'aria-label': 'Content', 'aria-multiline': 'true', role: 'textbox' } },
         onUpdate: ({ editor: current }) => {
-            textarea.value = current.isEmpty ? '' : toStoredMarkdown(current.getMarkdown());
+            textarea.value = current.isEmpty ? '' : current.getHTML();
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
         },
     });
 
+    const chain = () => editor.chain().focus();
+
     const toggleLink = () => {
         if (editor.isActive('link')) {
-            editor.chain().focus().extendMarkRange('link').unsetLink().run();
+            chain().extendMarkRange('link').unsetLink().run();
             return;
         }
         const url = window.prompt('Link URL (https://…, /page or #section)', 'https://');
         if (url === null) return;
         const href = normalizeUrl(url);
         if (href === '' || href === 'https://') return;
-        editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
+        chain().extendMarkRange('link').setLink({ href }).run();
     };
 
-    const tools = [
-        { label: 'H2', title: 'Subheading', run: (chain) => chain.toggleHeading({ level: 2 }), active: () => editor.isActive('heading', { level: 2 }) },
-        { label: 'H3', title: 'Smaller subheading', run: (chain) => chain.toggleHeading({ level: 3 }), active: () => editor.isActive('heading', { level: 3 }) },
-        { label: 'B', title: 'Bold', run: (chain) => chain.toggleBold(), active: () => editor.isActive('bold'), className: 'font-black' },
-        { label: 'I', title: 'Italic', run: (chain) => chain.toggleItalic(), active: () => editor.isActive('italic'), className: 'italic' },
-        { label: '• List', title: 'Bulleted list', run: (chain) => chain.toggleBulletList(), active: () => editor.isActive('bulletList') },
-        { label: '1. List', title: 'Numbered list', run: (chain) => chain.toggleOrderedList(), active: () => editor.isActive('orderedList') },
-        { label: '“ Quote', title: 'Quote', run: (chain) => chain.toggleBlockquote(), active: () => editor.isActive('blockquote') },
-        { label: 'Link', title: 'Add or remove link', onClick: toggleLink, active: () => editor.isActive('link') },
-        { label: '↶', title: 'Undo', run: (chain) => chain.undo(), enabled: () => editor.can().undo() },
-        { label: '↷', title: 'Redo', run: (chain) => chain.redo(), enabled: () => editor.can().redo() },
+    const hasMediaPicker = Boolean(document.querySelector('[data-media-picker]'));
+    const insertImage = () => {
+        const insert = (media) => {
+            if (!media.mime_type?.startsWith('image/')) {
+                window.alert('Choose an image file.');
+                return;
+            }
+            chain().setImage({ src: mediaSource(media.url), alt: media.alt_text || '', title: media.caption || null }).run();
+        };
+        window.dispatchEvent(new CustomEvent('cms:choose-media', { detail: { onSelect: insert } }));
+    };
+
+    const editImageAlt = () => {
+        const current = editor.getAttributes('image').alt ?? '';
+        const alt = window.prompt('Alternative text (describe the image for screen readers and search engines)', current);
+        if (alt !== null) chain().updateAttributes('image', { alt: alt.trim() }).run();
+    };
+
+    const insertVideo = () => {
+        const url = window.prompt('YouTube video URL');
+        if (!url) return;
+        if (!chain().setYoutubeVideo({ src: url.trim() }).run()) window.alert('That is not a YouTube video link.');
+    };
+
+    const separator = () => {
+        const line = document.createElement('span');
+        line.className = 'mx-0.5 h-5 w-px bg-cms-navy/12';
+        line.setAttribute('aria-hidden', 'true');
+        return line;
+    };
+
+    const blockStyle = document.createElement('select');
+    blockStyle.className = 'h-8 rounded-lg border border-cms-navy/10 bg-white px-2 text-xs font-semibold text-cms-navy outline-none focus:border-cms-gold';
+    blockStyle.setAttribute('aria-label', 'Text style');
+    [['paragraph', 'Paragraph'], ['2', 'Heading 2'], ['3', 'Heading 3'], ['4', 'Heading 4']].forEach(([value, label]) => blockStyle.add(new Option(label, value)));
+    blockStyle.addEventListener('change', () => {
+        if (blockStyle.value === 'paragraph') chain().setParagraph().run();
+        else chain().setHeading({ level: Number(blockStyle.value) }).run();
+    });
+
+    const mainTools = [
+        blockStyle,
+        separator(),
+        { label: 'B', title: 'Bold', run: () => chain().toggleBold().run(), active: () => editor.isActive('bold'), className: 'font-black' },
+        { label: 'I', title: 'Italic', run: () => chain().toggleItalic().run(), active: () => editor.isActive('italic'), className: 'italic' },
+        { label: 'U', title: 'Underline', run: () => chain().toggleUnderline().run(), active: () => editor.isActive('underline'), className: 'underline' },
+        { label: 'S', title: 'Strikethrough', run: () => chain().toggleStrike().run(), active: () => editor.isActive('strike'), className: 'line-through' },
+        { label: 'Mark', title: 'Highlight', run: () => chain().toggleHighlight().run(), active: () => editor.isActive('highlight') },
+        { label: 'Link', title: 'Add or remove link', run: toggleLink, active: () => editor.isActive('link') },
+        separator(),
+        ...[['left', '⇤'], ['center', '↔'], ['right', '⇥'], ['justify', '☰']].map(([alignment, label]) => ({
+            label,
+            title: `Align ${alignment}`,
+            run: () => chain().setTextAlign(alignment).run(),
+            active: () => (alignment === 'left' ? !['center', 'right', 'justify'].some((other) => editor.isActive({ textAlign: other })) : editor.isActive({ textAlign: alignment })),
+        })),
+        separator(),
+        { label: '• List', title: 'Bulleted list', run: () => chain().toggleBulletList().run(), active: () => editor.isActive('bulletList') },
+        { label: '1. List', title: 'Numbered list', run: () => chain().toggleOrderedList().run(), active: () => editor.isActive('orderedList') },
+        { label: '“ Quote', title: 'Quote', run: () => chain().toggleBlockquote().run(), active: () => editor.isActive('blockquote') },
+        { label: '</>', title: 'Code block', run: () => chain().toggleCodeBlock().run(), active: () => editor.isActive('codeBlock') },
+        { label: '—', title: 'Divider', run: () => chain().setHorizontalRule().run() },
+        separator(),
+        ...(hasMediaPicker ? [{ label: 'Image', title: 'Insert image from the Media Library', run: insertImage }] : []),
+        { label: 'Alt', title: 'Edit image alternative text', run: editImageAlt, visible: () => editor.isActive('image') },
+        { label: 'YouTube', title: 'Embed a YouTube video', run: insertVideo },
+        { label: 'Table', title: 'Insert table', run: () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), enabled: () => !editor.isActive('table') },
+        separator(),
+        { label: '↶', title: 'Undo', run: () => chain().undo().run(), enabled: () => editor.can().undo() },
+        { label: '↷', title: 'Redo', run: () => chain().redo().run(), enabled: () => editor.can().redo() },
     ];
 
-    const buttons = tools.map((tool) => {
+    const tableTools = [
+        { label: '+ Row ↑', title: 'Add row above', run: () => chain().addRowBefore().run() },
+        { label: '+ Row ↓', title: 'Add row below', run: () => chain().addRowAfter().run() },
+        { label: '− Row', title: 'Delete row', run: () => chain().deleteRow().run() },
+        separator(),
+        { label: '+ Col ←', title: 'Add column left', run: () => chain().addColumnBefore().run() },
+        { label: '+ Col →', title: 'Add column right', run: () => chain().addColumnAfter().run() },
+        { label: '− Col', title: 'Delete column', run: () => chain().deleteColumn().run() },
+        separator(),
+        { label: 'Merge', title: 'Merge selected cells', run: () => chain().mergeCells().run(), enabled: () => editor.can().mergeCells() },
+        { label: 'Split', title: 'Split cell', run: () => chain().splitCell().run(), enabled: () => editor.can().splitCell() },
+        { label: 'Header row', title: 'Toggle header row', run: () => chain().toggleHeaderRow().run() },
+        separator(),
+        { label: 'Delete table', title: 'Delete table', run: () => chain().deleteTable().run(), className: 'text-red-700' },
+    ];
+
+    const renderTools = (tools, row) => tools.map((tool) => {
+        if (tool instanceof HTMLElement) {
+            row.append(tool);
+            return null;
+        }
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `${buttonClass} ${tool.className ?? ''}`;
@@ -101,16 +222,26 @@ export function mountRichTextEditor(textarea) {
         button.setAttribute('aria-label', tool.title);
         // Keep the selection in the editor while clicking the toolbar.
         button.addEventListener('mousedown', (event) => event.preventDefault());
-        button.addEventListener('click', () => (tool.onClick ? tool.onClick() : tool.run(editor.chain().focus()).run()));
-        toolbar.append(button);
+        button.addEventListener('click', tool.run);
+        row.append(button);
 
         return { tool, button };
-    });
+    }).filter(Boolean);
 
-    const syncToolbar = () => buttons.forEach(({ tool, button }) => {
-        if (tool.active) button.setAttribute('aria-pressed', String(tool.active()));
-        if (tool.enabled) button.disabled = !tool.enabled();
-    });
+    const buttons = [...renderTools(mainTools, mainRow), ...renderTools(tableTools, tableRow)];
+
+    const syncToolbar = () => {
+        buttons.forEach(({ tool, button }) => {
+            if (tool.active) button.setAttribute('aria-pressed', String(tool.active()));
+            if (tool.enabled) button.disabled = !tool.enabled();
+            if (tool.visible) button.hidden = !tool.visible();
+        });
+        const level = editor.getAttributes('heading').level;
+        blockStyle.value = editor.isActive('heading') && level ? String(level) : 'paragraph';
+        const inTable = editor.isActive('table');
+        tableRow.classList.toggle('hidden', !inTable);
+        tableRow.classList.toggle('flex', inTable);
+    };
     editor.on('selectionUpdate', syncToolbar);
     editor.on('transaction', syncToolbar);
     syncToolbar();

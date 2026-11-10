@@ -12,6 +12,7 @@ use App\Models\Post;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 uses(LazilyRefreshDatabase::class);
@@ -152,4 +153,19 @@ test('administrators can mark a post as featured and give it a cover', function 
         ->assertJsonPath('data.is_featured', true)
         ->assertJsonPath('data.cover_image.id', $cover->id)
         ->assertJsonPath('data.reading_time_minutes', 1);
+});
+
+test('an article body is sanitized again on output and wide tables get a scroll wrapper', function () {
+    $post = blogPost(['slug' => 'tabel-paket']);
+    // Written past the model, as an old row or a direct database edit would be.
+    DB::table('posts')->where('id', $post->id)->update(['blocks' => json_encode([['type' => 'rich_text', 'data' => [
+        'content' => '<table><tbody><tr><th><p>Paket</p></th></tr></tbody></table><p onclick="steal()">Akhir<script>alert(1)</script></p>',
+    ]]])]);
+
+    $this->get('/blog/tabel-paket')
+        ->assertSuccessful()
+        ->assertSee('<div data-table-scroll><table>', false)
+        ->assertSee('<p>Akhir</p>', false)
+        ->assertDontSee('onclick="steal()"', false)
+        ->assertDontSee('<script>alert(1)</script>', false);
 });

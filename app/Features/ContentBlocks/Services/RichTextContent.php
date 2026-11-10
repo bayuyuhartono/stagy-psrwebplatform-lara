@@ -36,7 +36,18 @@ class RichTextContent
             ? $content
             : Str::markdown($content, ['html_input' => 'strip', 'allow_unsafe_links' => false]);
 
-        return trim($this->sanitizer()->sanitize($html));
+        // The editor always keeps an empty paragraph after a final table, image or video; it would only add space.
+        return preg_replace('#(?:\s*<p>(?:\s|<br\s*/?>)*</p>)+$#', '', trim($this->sanitizer()->sanitize($html)));
+    }
+
+    /**
+     * Safe HTML for a page. Tables get a scroll wrapper so a wide table scrolls
+     * sideways on phones instead of stretching the layout; the wrapper is added
+     * only here, never stored, so the editor never sees it.
+     */
+    public function render(?string $content): string
+    {
+        return str_replace(['<table>', '</table>'], ['<div data-table-scroll><table>', '</table></div>'], $this->toHtml($content));
     }
 
     /**

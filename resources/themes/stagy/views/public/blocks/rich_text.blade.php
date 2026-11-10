@@ -1,6 +1,6 @@
 @inject('richText', 'App\Features\ContentBlocks\Services\RichTextContent')
 
-{{-- Rich text is HTML from the CMS editor, passed through RichTextContent's allowlist again on output. --}}
+{{-- Rich text is HTML from the CMS editor, passed through RichTextContent's allowlist again on output (render()). --}}
 @php
     $proseClass = implode(' ', [
         'text-[0.9375rem] leading-[1.9] text-public-ink [&>*:first-child]:mt-0',
@@ -14,14 +14,14 @@
         '[&_pre]:mt-6 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-public-ink [&_pre]:p-5 [&_pre]:font-mono [&_pre]:text-[0.8125rem] [&_pre]:leading-[1.7] [&_pre]:text-white [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-public-mint [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:font-mono [&_:not(pre)>code]:text-[0.85em]',
         '[&_img]:mt-6 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-2xl',
         '[&_[data-youtube-video]]:mt-6 [&_iframe]:aspect-video [&_iframe]:h-auto [&_iframe]:w-full [&_iframe]:rounded-2xl',
-        // Wide tables scroll sideways on phones instead of stretching the page.
-        '[&_table]:mt-6 [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:border-collapse [&_table]:text-sm',
+        // Wide tables scroll sideways on phones (RichTextContent::render() adds the wrapper) instead of stretching the page.
+        '[&_[data-table-scroll]]:mt-6 [&_[data-table-scroll]]:overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_table]:text-sm',
         '[&_td]:border [&_td]:border-public-line [&_td]:px-4 [&_td]:py-2.5 [&_td]:align-top [&_th]:border [&_th]:border-public-line [&_th]:bg-public-mist [&_th]:px-4 [&_th]:py-2.5 [&_th]:text-left [&_th]:align-top [&_th]:font-normal [&_td_p]:mt-0 [&_th_p]:mt-0',
     ]);
 @endphp
 
 <x-public.container as="section" width="text" class="py-6">
     <div class="{{ $proseClass }}">
-        {!! $richText->toHtml($data['content'] ?? '') !!}
+        {!! $richText->render($data['content'] ?? '') !!}
     </div>
 </x-public.container>

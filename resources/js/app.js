@@ -1952,16 +1952,16 @@ if (pageEditor) {
             const textarea = document.createElement('textarea');
             textarea.dataset.field = 'content';
             textarea.value = data.content ?? '';
-            textarea.setAttribute('aria-label', 'Content (Markdown)');
+            textarea.setAttribute('aria-label', 'Content (HTML)');
             textarea.className = 'min-h-72 resize-y rounded-xl border border-cms-navy/10 bg-white px-3 py-2.5 text-sm leading-6 outline-none focus:border-cms-gold';
             const hint = document.createElement('span');
             hint.className = 'text-xs leading-5 text-cms-navy/45';
-            hint.textContent = 'Use H2 / H3 for subheadings: they help readers and search engines scan the article. Pasted formatting is reduced to headings, bold, italic, lists, quotes and links.';
+            hint.textContent = 'Use Heading 2 / 3 for subheadings: they help readers and search engines scan the article. Click inside a table for row and column tools; select an image to edit its alt text.';
             content.append(caption, textarea, hint);
             body.append(content);
-            // Loaded on demand so public pages never download the editor. If it fails, the Markdown textarea still works.
+            // Loaded on demand so public pages never download the editor. If it fails, the HTML stays editable as text.
             import('./rich-text-editor.js').then(({ mountRichTextEditor }) => mountRichTextEditor(textarea)).catch(() => {
-                hint.textContent = 'Markdown supported: ## Subheading, ### Smaller subheading, **bold**, *italic*, - list item, [link text](https://…).';
+                hint.textContent = 'The visual editor could not load. Content is HTML: <h2>Subheading</h2>, <p>Paragraph</p>, <strong>bold</strong>, <a href="https://…">link</a>.';
             });
         }
         if (type === 'hero') body.append(
@@ -2377,6 +2377,13 @@ if (mediaPicker) {
                     button.append(visual, name);
                     button.addEventListener('click', () => {
                         if (!mediaPickerTarget) return;
+                        // Callers that need the whole media record (the rich text editor's images) pass onSelect.
+                        if (mediaPickerTarget.onSelect) {
+                            const { onSelect } = mediaPickerTarget;
+                            closePicker();
+                            onSelect(media);
+                            return;
+                        }
                         mediaPickerTarget.input.value = media.id;
                         mediaPickerTarget.copy.textContent = media.original_name;
                         mediaPickerTarget.preview.replaceChildren(mediaVisual(media));
