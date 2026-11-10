@@ -18,6 +18,8 @@
     --public-deep: #2b2b2b;
     --public-on-ink: #bdbdbd;
     --public-font: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    /* Long-form reading text (article bodies). Same as --public-font unless a theme's display face is unsuited to paragraphs. */
+    --public-body-font: var(--public-font);
 }
 
 @theme inline {
@@ -37,4 +39,5 @@
     --color-public-deep: var(--public-deep);
     --color-public-on-ink: var(--public-on-ink);
     --font-public: var(--public-font);
+    --font-public-body: var(--public-body-font);
 }

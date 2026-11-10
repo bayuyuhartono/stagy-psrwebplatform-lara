@@ -1,0 +1,68 @@
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-400-normal-DRC__1Mx.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-400-italic-DCPiXYsF.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-500-normal-Dk9ku72i.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-500-italic-dJ09OWzu.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-600-normal-B7fBEWYG.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/build/assets/instrument-sans-600-italic-BhZ_8V5m.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Horizon";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/build/assets/horizon-400-normal-C2TB3YHP.woff2") format("woff2");
+}
+
+:root {
+  --font-instrument-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-horizon: "Horizon", ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-instrument-sans {
+  font-family: var(--font-instrument-sans);
+}
+
+.font-horizon {
+  font-family: var(--font-horizon);
+}

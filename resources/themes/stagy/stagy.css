@@ -3,11 +3,11 @@
  * below override the shared public-* design tokens declared in theme.css.
  */
 
-@font-face {
-    font-family: 'Horizon';
-    src: url('./assets/fonts/horizon.otf') format('opentype');
-    font-display: swap;
-}
+/*
+ * Horizon is served by the Vite font plugin (vite.config.js) as WOFF2 and
+ * preloaded by @fonts in the layout. Article text uses Instrument Sans
+ * (--public-body-font): Horizon is a wide all-caps display face.
+ */
 
 :root {
     --public-ink: #1e2956;
@@ -24,6 +24,7 @@
     --public-on-ink: #c3cae0;
 
     --public-font: 'Horizon', ui-sans-serif, system-ui, sans-serif;
+    --public-body-font: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 html {

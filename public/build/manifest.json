@@ -1,34 +1,38 @@
 {
-  "_fonts-C9MNnjVw.css": {
-    "file": "assets/fonts-C9MNnjVw.css",
-    "src": "_fonts-C9MNnjVw.css"
+  "_fonts-CgbQK1Wg.css": {
+    "file": "assets/fonts-CgbQK1Wg.css",
+    "src": "_fonts-CgbQK1Wg.css"
   },
-  "_instrument-sans-400-normal-D1W7dsQl.woff": {
-    "file": "assets/instrument-sans-400-normal-D1W7dsQl.woff",
-    "src": "_instrument-sans-400-normal-D1W7dsQl.woff"
+  "_horizon-400-normal-C2TB3YHP.woff2": {
+    "file": "assets/horizon-400-normal-C2TB3YHP.woff2",
+    "src": "_horizon-400-normal-C2TB3YHP.woff2"
+  },
+  "_instrument-sans-400-italic-DCPiXYsF.woff2": {
+    "file": "assets/instrument-sans-400-italic-DCPiXYsF.woff2",
+    "src": "_instrument-sans-400-italic-DCPiXYsF.woff2"
   },
   "_instrument-sans-400-normal-DRC__1Mx.woff2": {
     "file": "assets/instrument-sans-400-normal-DRC__1Mx.woff2",
     "src": "_instrument-sans-400-normal-DRC__1Mx.woff2"
   },
+  "_instrument-sans-500-italic-dJ09OWzu.woff2": {
+    "file": "assets/instrument-sans-500-italic-dJ09OWzu.woff2",
+    "src": "_instrument-sans-500-italic-dJ09OWzu.woff2"
+  },
   "_instrument-sans-500-normal-Dk9ku72i.woff2": {
     "file": "assets/instrument-sans-500-normal-Dk9ku72i.woff2",
     "src": "_instrument-sans-500-normal-Dk9ku72i.woff2"
   },
-  "_instrument-sans-500-normal-Z6ESRlEs.woff": {
-    "file": "assets/instrument-sans-500-normal-Z6ESRlEs.woff",
-    "src": "_instrument-sans-500-normal-Z6ESRlEs.woff"
+  "_instrument-sans-600-italic-BhZ_8V5m.woff2": {
+    "file": "assets/instrument-sans-600-italic-BhZ_8V5m.woff2",
+    "src": "_instrument-sans-600-italic-BhZ_8V5m.woff2"
   },
   "_instrument-sans-600-normal-B7fBEWYG.woff2": {
     "file": "assets/instrument-sans-600-normal-B7fBEWYG.woff2",
     "src": "_instrument-sans-600-normal-B7fBEWYG.woff2"
   },
-  "_instrument-sans-600-normal-B9e8oLYv.woff": {
-    "file": "assets/instrument-sans-600-normal-B9e8oLYv.woff",
-    "src": "_instrument-sans-600-normal-B9e8oLYv.woff"
-  },
   "resources/css/app.css": {
-    "file": "assets/app-BbeJxDAG.css",
+    "file": "assets/app-CFyRYne7.css",
     "name": "app",
     "names": [
       "app.css"
@@ -50,10 +54,6 @@
     "name": "rich-text-editor",
     "src": "resources/js/rich-text-editor.js",
     "isDynamicEntry": true
-  },
-  "resources/themes/stagy/assets/fonts/horizon.otf": {
-    "file": "assets/horizon-BZS2kkdk.otf",
-    "src": "resources/themes/stagy/assets/fonts/horizon.otf"
   },
   "resources/themes/stagy/assets/images/apple-touch-icon.png": {
     "file": "assets/apple-touch-icon-DqSUoNsR.png",
@@ -80,16 +80,13 @@
     "src": "resources/themes/stagy/assets/images/og-default.png"
   },
   "resources/themes/stagy/stagy.css": {
-    "file": "assets/stagy-DoVeu2Y3.css",
+    "file": "assets/stagy-DPkOxCc8.css",
     "name": "stagy",
     "names": [
       "stagy.css"
     ],
     "src": "resources/themes/stagy/stagy.css",
-    "isEntry": true,
-    "assets": [
-      "assets/horizon-BZS2kkdk.otf"
-    ]
+    "isEntry": true
   },
   "resources/themes/stagy/stagy.js": {
     "file": "assets/stagy-D4BwzH2U.js",

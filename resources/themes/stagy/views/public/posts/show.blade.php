@@ -11,6 +11,10 @@
     $shareText = rawurlencode($post->title.' '.$articleUrl);
 @endphp
 
+@pushOnce('fonts', 'reading-font')
+    @fonts('instrument-sans')
+@endPushOnce
+
 <x-public.layout :page="$post" :settings="$settings" :menu="$menu" :meta-title="$post->title" :meta-description="$post->excerpt" :canonical="$articleUrl">
     <article>
         <x-public.container as="header" width="article" class="flex flex-col gap-5 pt-14">
@@ -38,7 +42,7 @@
         </x-public.container>
 
         @if (filled($post->excerpt))
-            <x-public.container as="p" width="article" class="pt-8 text-lg leading-[1.8] text-public-muted">{{ $post->excerpt }}</x-public.container>
+            <x-public.container as="p" width="article" class="pt-8 font-public-body text-xl leading-[1.7] tracking-normal text-public-muted">{{ $post->excerpt }}</x-public.container>
         @endif
 
         <div class="pt-2 pb-6">

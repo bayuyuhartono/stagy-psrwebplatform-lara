@@ -32,6 +32,9 @@
         @endif
         <meta name="theme-color" content="#1E2956">
         @include('public.partials.seo-head')
+        {{-- Horizon on every page; the reading face only where an article body or rich text pushes it (@pushOnce('fonts')). --}}
+        @fonts('horizon')
+        @stack('fonts')
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/themes/stagy/stagy.css', 'resources/themes/stagy/stagy.js'])
     </head>
     <body class="min-h-screen bg-public-paper font-public text-[0.9375rem] leading-[1.75] tracking-[0.01em] text-public-ink antialiased selection:bg-public-accent selection:text-white">
